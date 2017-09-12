@@ -97,5 +97,11 @@ ENV/
 # mkdocs documentation
 /site
 
+# PyCharm project settings
+.idea
+
 # mypy
 .mypy_cache/
+
+# Mac
+.DS_Store
