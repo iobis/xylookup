@@ -140,7 +140,7 @@ _tree = _build_kdtree(_coastpoints)
 if __name__ == "__main__":
     def _get_test_points():
         import psycopg2
-        conn = psycopg2.connect("dbname=xylookup user=postgres port=5433 password=postgres")
+        conn = psycopg2.connect("dbname=xylookup user=postgres port=5432 password=postgres")
         cur = conn.cursor()
         cur.execute("SELECT x, y FROM test_points_100000")
         points = cur.fetchall()
