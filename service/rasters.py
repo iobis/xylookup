@@ -37,11 +37,12 @@ class Raster:
     def contains_points(self, x, y): # x, y should be numpy arrays
         return (self.minx < x) & (x < self.maxx) & (self.miny < y) & (y < self.maxy)
 
-    def get_cells(self, x, y):
-        return self.ncol * math.floor(-(y-self.maxy) / self.yres) + math.floor((x-self.minx) / self.xres)
+    def get_rows_cols(self, x, y):
+        rows, cols = np.floor((y-self.maxy) / self.yres), np.floor((x-self.minx) / self.xres)
+        return rows.astype(int), cols.astype(int)
 
     def get_values(self, x, y):
-        cells = self.get_cells(x, y)
+        cells = self.get_rows_cols(x, y)
         values = self.data[cells]
         okdata = values != self.nodata
         return values, okdata
@@ -51,10 +52,8 @@ class Raster:
 
 
 def get_raster_values(points):
-    output = [{} for p in points]
-    points = np.array(points)
-    pT = points.T
-    x, y = pT[0], pT[1]
+    output = [{} for _ in points]
+    x, y = np.array(points).T
     id = np.array(range(0, len(x)))
     for category in categories:
         id_remaining, x_remaining, y_remaining = id, x, y
@@ -63,45 +62,16 @@ def get_raster_values(points):
                 which = raster.contains_points(x_remaining,y_remaining)
                 values, okdata = raster.get_values(x_remaining[which], y_remaining[which])
                 values = values[okdata]
-                id_ok = id_remaining[which[okdata]]
+                id_ok = id_remaining[which][okdata]
+                if len(id_ok) > 0:
+                    for i, id in enumerate(id_ok):
+                        output[id][category] = values[i]
 
-                for i, id in enumerate(id_ok):
-                    output[id][category] = values[i]
-
-                id_remaining = np.array(set(id_remaining) - set(id_ok))
-                x_remaining = x[id_remaining]
-                y_remaining = y[id_remaining]
+                    id_remaining = np.array(list(set(id_remaining) - set(id_ok)))
+                    if len(id_remaining) > 0:
+                        x_remaining = x[id_remaining]
+                        y_remaining = y[id_remaining]
     return output
-
-    #
-    # values = [{} for p in points]
-    # for category in categories:
-    #     vfound = np.zeros(len(points))
-    #     for raster in rasters:
-    #         rpoints = []
-    #         rcells = []
-    #         if raster.category == category:
-    #             for pi, point in enumerate(points):
-    #                 cell = raster.get_cell(point[0], point[1])
-    #                 if cell:
-    #                     rpoints.append(pi)
-    #                     rcells.append(cell)
-    #             values = raster.get_values(rcells)
-    #             for vi, v in enumerate(values):
-    #                 rpoints[vi]
-    #
-    #
-    # for x,y in points:
-    #     values = {}
-    #     last_category = None
-    #     for raster in rasters:
-    #         if raster.category == last_category:
-    #             continue
-    #         v = raster.get_value(x, y)
-    #         if v:
-    #             values[raster.category] = v
-    #             last_category = raster.category
-    return
 
 # x = {'id':'A1', 'category':'bathymetry', 'path':os.path.join('/Users/samuel/a/tmp/A1.dat'), 'dtype':'int16', 'shape':(7200, 9480), 'minx':0,'maxx':1,'miny':2,'maxy':3}
 # s = pickle.dumps(x)
@@ -119,9 +89,13 @@ if __name__ == "__main__":
         import psycopg2
         conn = psycopg2.connect("dbname=xylookup user=postgres port=5432 password=postgres")
         cur = conn.cursor()
-        cur.execute("SELECT x, y FROM test_points_100000")
+        cur.execute("SELECT x, y FROM test_points_1000000")
         points = cur.fetchall()
         return [tuple(point) for point in points]
     points = _get_test_points()
     print("Ready for rasters :-)")
-    get_raster_values(points)
+    import cProfile
+    v = get_raster_values(points)
+    cProfile.runctx('get_raster_values(points)', globals(), locals())
+    
+    # TODO BUG get_raster_values([[-17.48, 84.12, ]]) # SHOULD RETURN -3633.2
