@@ -14,7 +14,7 @@ class Raster:
     def __init__(self, rasterdir, metadata):  # id, category, path, dtype, shape, minx, miny, maxx, maxy, startdate=None, enddate=None, mindepth=None, maxdepth=None
         self.id = metadata['id']
         self.category = metadata['category']
-        ncol, nrow =  tuple(metadata['shape'])
+        ncol, nrow = tuple(metadata['shape'])
         self.nrow = nrow
         self.ncol = ncol
         path = os.path.join(rasterdir, self.id + '.mmf')
@@ -26,7 +26,10 @@ class Raster:
         self.mindepth, self.maxdepth = metadata.get('mindepth',float("-inf")), metadata.get('maxdepth',float("inf"))
         self.hasdate = self.startdate and self.enddate
         self.hasdepth = self.mindepth and self.maxdepth
-        self.nodata = metadata['nodata']
+        self.info = metadata['info']
+        self.nodata = float(self.info['missing_value'])
+        self.add_offset = float(self.info.get('add_offset',0))
+        self.scale_factor = float(self.info.get('scale_factor',1.0))
 
     # def contains_date(self, date):
     #     return self.startdate <= date <= self.enddate
@@ -42,10 +45,10 @@ class Raster:
         return rows.astype(int), cols.astype(int)
 
     def get_values(self, x, y):
-        cells = self.get_rows_cols(x, y)
-        values = self.data[cells]
-        okdata = values != self.nodata
-        return values, okdata
+        r,c = self.get_rows_cols(x, y)
+        values = self.data[r,c]
+        okdata = (values <= self.nodata-1e-12) | (values >= self.nodata+1e-12)
+        return (values*self.scale_factor+self.add_offset), okdata
 
     def __str__(self):
         return str(self.__dict__)
@@ -73,16 +76,9 @@ def get_raster_values(points):
                         y_remaining = y[id_remaining]
     return output
 
-# x = {'id':'A1', 'category':'bathymetry', 'path':os.path.join('/Users/samuel/a/tmp/A1.dat'), 'dtype':'int16', 'shape':(7200, 9480), 'minx':0,'maxx':1,'miny':2,'maxy':3}
-# s = pickle.dumps(x)
-# r = Raster(pickle.loads(s))
 rasterdir = os.path.join(config.datadir, 'rasters')
 rasters = map(lambda d:Raster(rasterdir, d), json.load(open(os.path.join(rasterdir, 'rasters.metadata'), 'r')))
 categories = set(map(lambda r: r.category, rasters))
-
-def get_values(points):
-    return [{"TODO SALINITY": 123, "TODO SST": 456} for _ in points]
-
 
 if __name__ == "__main__":
     def _get_test_points():
@@ -97,5 +93,3 @@ if __name__ == "__main__":
     import cProfile
     v = get_raster_values(points)
     cProfile.runctx('get_raster_values(points)', globals(), locals())
-    
-    # TODO BUG get_raster_values([[-17.48, 84.12, ]]) # SHOULD RETURN -3633.2

@@ -25,7 +25,7 @@ def create_memmap(path, outdir, outname):
     fp = np.memmap(outpath, dtype=arr.dtype, mode='w+', shape=arr.shape)
     fp[:] = arr[:]
     del fp  # flush to disk
-    metadata = {'id': outname, 'dtype': str(arr.dtype), 'shape': arr.shape}
+    metadata = {'id': outname, 'dtype': str(arr.dtype), 'shape': arr.shape, 'info': band.GetMetadata_Dict()}
     metadata.update(get_info(ds))
     return metadata
 
@@ -43,7 +43,6 @@ def emodnet2memmap(overwrite=False):
         if overwrite or not os.path.exists(os.path.join(outdir, outname + '.mmf')) or not os.path.exists(os.path.join(outdir, outname + '.json')):
             metadata = create_memmap('NETCDF:"' + bathymnt + '":DEPTH', outdir, outname)
             metadata['category'] = 'bathymetry'
-            metadata['nodata'] = 32767
             json.dump(metadata, open(os.path.join(outdir, outname+'.json'), 'w'))
 
 

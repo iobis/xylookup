@@ -105,3 +105,6 @@ ENV/
 
 # Mac
 .DS_Store
+
+# yep profiling
+*.py.prof
