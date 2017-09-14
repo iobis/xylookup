@@ -57,8 +57,8 @@ class Raster:
 
 def get_raster_values(points):
     output = [{} for _ in points]
-    x, y = np.array(points).T
-    ids = np.array(range(0, len(x)))
+    x, y = points.T
+    ids = np.array(range(len(x)))
     for category in categories:
         ids_remaining, x_remaining, y_remaining = ids, x, y
         for raster in rasters:

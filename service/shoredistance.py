@@ -4,6 +4,14 @@ from scipy.spatial import cKDTree
 import gc
 import config
 import os
+_coastlines, _coastpoints, _tree = None, None, None
+
+
+def _init():
+    v = '50'  # '5' for higher resolution
+    global _coastlines, _coastpoints, _tree
+    _coastpoints, _coastlines = _load_coastlines(os.path.join(config.datadir, "shoredistance/coastlines"+v+".jsonlines"))
+    _tree = _build_kdtree(_coastpoints)
 
 
 def _load_coastlines(path):
@@ -123,6 +131,8 @@ def _on_land(cur, pointstable, npoints):
 
 
 def get_shoredistance(cur, points, pointstable):
+    # TODO: use function attributes to store the _tree, _coastpoints and _coastlines isntead of using globals
+    if not _tree: _init()
     distances = np.zeros(len(points))
     chunksize = 1000
     chunks = [points[i:i + chunksize] for i in range(0, len(points), chunksize)]
@@ -131,11 +141,6 @@ def get_shoredistance(cur, points, pointstable):
 
     onland = _on_land(cur, pointstable, len(points))
     return distances * onland
-
-
-_v = '50'  # '5' for higher resolution
-_coastpoints, _coastlines = _load_coastlines(os.path.join(config.datadir, "shoredistance/coastlines"+_v+".jsonlines"))
-_tree = _build_kdtree(_coastpoints)
 
 if __name__ == "__main__":
     def _get_test_points():

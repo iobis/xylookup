@@ -6,6 +6,7 @@ import uuid
 import areas
 import rasters
 import shoredistance
+import numpy as np
 from StringIO import StringIO
 
 conn = psycopg2.connect("dbname=xylookup user=postgres port=5432 password=postgres")
@@ -35,18 +36,25 @@ def lookup(req):
             points = msgpack.unpackb(doc, use_list=False)
         else:
             points = json.loads(doc)
+        if not points or len(points) == 0:
+            raise falcon.HTTPInvalidParam('No coordinates provided', 'points')
     else:
         x = req.get_param_as_list('x')
         y = req.get_param_as_list('y')
-        if not x or not y:
-            raise falcon.HTTPInvalidParam("Missing parameters x and/or y", "x/y")
+        if not x or not y or len(x) == 0 or len(y) == 0:
+            raise falcon.HTTPInvalidParam('Missing parameters x and/or y', 'x/y')
         elif len(x) != len(y):
-            raise falcon.HTTPInvalidParam("Length of x parameter is different from length of y", "x/y")
+            raise falcon.HTTPInvalidParam('Length of x parameter is different from length of y', 'x/y')
         points = zip(x, y)
-    if not points or len(points) == 0:
-        raise falcon.HTTPInvalidParam("No coordinates provided")
+
+    points = np.array(points)
+    try:
+        points.astype(float)
+    except ValueError:
+        raise falcon.HTTPInvalidParam('Coordinates not numeric', 'x/y points')
+
     if not all([-180 <= p[0] <= 180 and -90 <= p[1] <= 90 for p in points]):
-        raise falcon.HTTPInvalidParam("x,y values outside of the the world (xmin: -180, ymin: -90, xmax: 180, ymax: 90")
+        raise falcon.HTTPInvalidParam('Invalid coordinates (xmin: -180, ymin: -90, xmax: 180, ymax: 90', 'x/y points')
     try:
         with conn.cursor() as cur:
             pointstable = load_points(cur, points)
