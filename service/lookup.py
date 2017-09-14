@@ -38,7 +38,9 @@ def lookup(req):
     else:
         x = req.get_param_as_list('x')
         y = req.get_param_as_list('y')
-        if len(x) != len(y):
+        if not x or not y:
+            raise falcon.HTTPInvalidParam("Missing parameters x and/or y", "x/y")
+        elif len(x) != len(y):
             raise falcon.HTTPInvalidParam("Length of x parameter is different from length of y", "x/y")
         points = zip(x, y)
     if not points or len(points) == 0:

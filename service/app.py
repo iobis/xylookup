@@ -7,8 +7,9 @@ import lookup
 # VERSION 1: return all data (no filtering)
 
 
-class LookupResource:
-    def prepare_response(results, req, resp):
+class LookupResource(object):
+    @staticmethod
+    def _prepare_response(results, req, resp):
         if req.get_param("format") == "msgpack":
             resp.data = msgpack.packb(results, use_bin_type=True)
             resp.content_type = 'application/msgpack'
@@ -18,15 +19,19 @@ class LookupResource:
     
     def on_get(self, req, resp):
         results = lookup.lookup(req)
-        self.prepare_response(results, req, resp)
+        self._prepare_response(results, req, resp)
         
     def on_post(self, req, resp):
         results = lookup.lookup(req)
-        self.prepare_response(results, req, resp)
- 
-api = falcon.API()
-api.add_route('/lookup', LookupResource())
+        self._prepare_response(results, req, resp)
+
+
+def create():
+    api = falcon.API()
+    api.add_route('/lookup', LookupResource())
+    return api
 
 if __name__ == '__main__':
+    api = create()
     httpd = simple_server.make_server('127.0.0.1', 8000, api)
     httpd.serve_forever()

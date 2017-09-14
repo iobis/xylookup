@@ -1,29 +1,25 @@
-import falcon
 from falcon import testing
-import msgpack
 import pytest
 
-from look.app import api
+import service.app
 
-
-@pytest.fixture
+@pytest.fixture()
 def client():
-    return testing.TestClient(api)
+    return testing.TestClient(service.app.create())
 
 
-# pytest will inject the object returned by the "client" function
-# as an additional parameter.
-def test_list_images(client):
-    doc = {
-        'images': [
-            {
-                'href': '/images/1eaf6ef1-7f2d-4ecc-a8d5-6e8adba7cc0e.png'
-            }
-        ]
-    }
+def test_get_different_length_xy(client):
+    result = client.simulate_get('/lookup', query_string = "x=3,4&y=2")
+    assert result.status_code == 400
+    assert "Invalid" in result.json["title"]
+    assert "Length" in result.json["description"]
 
-    response = client.simulate_get('/images')
-    result_doc = msgpack.unpackb(response.content, encoding='utf-8')
 
-    assert result_doc == doc
-    assert response.status == falcon.HTTP_OK
+## THINGS TO TEST
+# 1) query_string parameter validation
+# 2) correct values areas
+# 3) correct values landdistance
+# 4) correct values rasters, check nodata works for all rasters
+# 5) msgpack
+# 6) POST doc works
+# 7) POST doc parameter validation

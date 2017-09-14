@@ -26,10 +26,11 @@ class Raster:
         self.mindepth, self.maxdepth = metadata.get('mindepth',float("-inf")), metadata.get('maxdepth',float("inf"))
         self.hasdate = self.startdate and self.enddate
         self.hasdepth = self.mindepth and self.maxdepth
-        self.info = metadata['info']
-        self.nodata = float(self.info['missing_value'])
-        self.add_offset = float(self.info.get('add_offset',0))
-        self.scale_factor = float(self.info.get('scale_factor',1.0))
+        self.bandinfo = metadata['bandinfo']
+        self.rasterinfo = metadata['rasterinfo']
+        self.nodata = float(metadata['nodata'])
+        self.add_offset = float(self.bandinfo.get('add_offset',0))
+        self.scale_factor = float(self.bandinfo.get('scale_factor',1.0))
 
     # def contains_date(self, date):
     #     return self.startdate <= date <= self.enddate
@@ -57,27 +58,28 @@ class Raster:
 def get_raster_values(points):
     output = [{} for _ in points]
     x, y = np.array(points).T
-    id = np.array(range(0, len(x)))
+    ids = np.array(range(0, len(x)))
     for category in categories:
-        id_remaining, x_remaining, y_remaining = id, x, y
+        ids_remaining, x_remaining, y_remaining = ids, x, y
         for raster in rasters:
             if raster.category == category:
                 which = raster.contains_points(x_remaining,y_remaining)
                 values, okdata = raster.get_values(x_remaining[which], y_remaining[which])
                 values = values[okdata]
-                id_ok = id_remaining[which][okdata]
+                id_ok = ids_remaining[which][okdata]
                 if len(id_ok) > 0:
                     for i, id in enumerate(id_ok):
                         output[id][category] = values[i]
 
-                    id_remaining = np.array(list(set(id_remaining) - set(id_ok)))
-                    if len(id_remaining) > 0:
-                        x_remaining = x[id_remaining]
-                        y_remaining = y[id_remaining]
+                    ids_remaining = np.array(list(set(ids_remaining) - set(id_ok)))
+                    if len(ids_remaining) > 0:
+                        x_remaining = x[ids_remaining]
+                        y_remaining = y[ids_remaining]
     return output
 
 rasterdir = os.path.join(config.datadir, 'rasters')
 rasters = map(lambda d:Raster(rasterdir, d), json.load(open(os.path.join(rasterdir, 'rasters.metadata'), 'r')))
+rasters.sort(key=lambda r: math.fabs(r.xres))  # smaller xres = higher precision so ranked first in the list of rasters
 categories = set(map(lambda r: r.category, rasters))
 
 if __name__ == "__main__":
