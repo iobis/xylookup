@@ -30,12 +30,22 @@ def load_points(cur, points):
 
 def lookup(req):
     # points should be a nested array of x,y coordinates
-    doc = req.context.get('doc', None)
-    if doc:
-        if req.get_param('format') == 'msgpack':
-            points = msgpack.unpackb(doc, use_list=False)
+    if req.method == "POST":
+        try:
+            raw_data = req.stream.read()
+        except Exception as ex:
+            raise falcon.HTTPError(falcon.HTTP_400, 'Error reading data from POST', ex.message)
+
+        if req.content_type and req.content_type.lower() == falcon.MEDIA_MSGPACK:
+            try:
+                points = msgpack.unpackb(raw_data, use_list=False)
+            except ValueError:
+                raise falcon.HTTPError(falcon.HTTP_400, 'Invalid msgpack', 'Could not decode the request body. The ''msgpack was incorrect.')
         else:
-            points = json.loads(doc)
+            try:
+                points = json.loads(raw_data, encoding='utf-8')
+            except ValueError:
+                raise falcon.HTTPError(falcon.HTTP_400, 'Invalid JSON', 'Could not decode the request body. The ''JSON was incorrect.'+str(raw_data))
         if not points or len(points) == 0:
             raise falcon.HTTPInvalidParam('No coordinates provided', 'points')
     else:
@@ -49,21 +59,25 @@ def lookup(req):
 
     points = np.array(points)
     try:
-        points.astype(float)
+        points = points.astype(float)
     except ValueError:
         raise falcon.HTTPInvalidParam('Coordinates not numeric', 'x/y points')
 
     if not all([-180 <= p[0] <= 180 and -90 <= p[1] <= 90 for p in points]):
-        raise falcon.HTTPInvalidParam('Invalid coordinates (xmin: -180, ymin: -90, xmax: 180, ymax: 90', 'x/y points')
+        raise falcon.HTTPInvalidParam('Invalid coordinates (xmin: -180, ymin: -90, xmax: 180, ymax: 90)', 'x/y points')
     try:
         with conn.cursor() as cur:
             pointstable = load_points(cur, points)
-            results = areas.get_areas(cur, points, pointstable)
+            areavals = areas.get_areas(cur, points, pointstable)
             rastervals = rasters.get_values(points)
             shoredists = shoredistance.get_shoredistance(cur, points, pointstable)
-        for idx, result in results:
-            result.extend(rastervals[idx])
-            result.append(shoredists[idx])
+        results = [{} for _ in range(len(points))]
+        for idx, result in enumerate(results):
+            result['areas'] = areavals[idx]
+            result['grids'] = rastervals[idx]
+            result['shoredistance'] = shoredists[idx]
+    except Exception as ex:
+        raise falcon.HTTPError(falcon.HTTP_400, 'Error looking up data for provided points', ex.message)
     finally:
         conn.rollback()
     return results

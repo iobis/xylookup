@@ -121,7 +121,7 @@ def _on_land(cur, pointstable, npoints):
     cur.execute("""
     SELECT pts.id
       FROM {0} pts
- LEFT JOIN water_polygons0_00005 all_water ON ST_Intersects(all_water_diff.geom, pts.geom)
+ LEFT JOIN water_polygons0_00005 all_water ON ST_Intersects(all_water.geom, pts.geom)
      WHERE all_water.geom IS NULL
     """.format(pointstable))
     ids_onland = cur.fetchall()
@@ -140,7 +140,7 @@ def get_shoredistance(cur, points, pointstable):
         distances[i*chunksize:((i+1)*chunksize)] = _getcoastlinedistance(chunk, _tree, _coastpoints, _coastlines)
 
     onland = _on_land(cur, pointstable, len(points))
-    return distances * onland
+    return np.round(distances * onland)
 
 if __name__ == "__main__":
     def _get_test_points():

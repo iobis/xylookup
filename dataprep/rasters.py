@@ -56,6 +56,8 @@ def emodnet2memmap(overwrite=False):
         if overwrite or not output_exists(outdir, outname):
             metadata = create_memmap('NETCDF:"' + bathymnt + '":DEPTH', outdir, outname)
             metadata['category'] = 'bathymetry'
+            metadata['bandinfo']['scale_factor'] = -1 * float(metadata['bandinfo'].get('scale_factor', 1))
+            metadata['bandinfo']['add_offset'] = -1 * float(metadata['bandinfo'].get('add_offset', 0))
             json.dump(metadata, open(os.path.join(outdir, outname+'.json'), 'w'))
 
 
@@ -66,7 +68,8 @@ def gebco2memmap(overwrite=False):
         metadata = create_memmap('NETCDF:"' + os.path.join(gebco_dir, 'GEBCO_2014_2D.nc":elevation'), outdir, outname)
         metadata['category'] = 'bathymetry'
         metadata['bandinfo']['missing_value'] = 32767
-        metadata['bandinfo']['scale_factor'] = '-1'
+        metadata['bandinfo']['scale_factor'] = -1 * float(metadata['bandinfo'].get('scale_factor', 1))
+        metadata['bandinfo']['add_offset'] = -1 * float(metadata['bandinfo'].get('add_offset', 0))
         json.dump(metadata, open(os.path.join(outdir, outname + '.json'), 'w'))
 
 
@@ -78,7 +81,22 @@ def gbr100v5_memmap(overwrite=False):
     if overwrite or not output_exists(outdir, outname):
         metadata = create_memmap('NETCDF:"' + os.path.join(gbr_dir, 'gbr100_02sep_v5.grd":depth'), outdir, outname)
         metadata['category'] = 'bathymetry'
+        metadata['bandinfo']['scale_factor'] = -1 * float(metadata['bandinfo'].get('scale_factor', 1))
+        metadata['bandinfo']['add_offset'] = -1 * float(metadata['bandinfo'].get('add_offset',0))
         json.dump(metadata, open(os.path.join(outdir, outname + '.json'), 'w'))
+
+
+def boem2memmap(overwrite=False):
+    # BOEM Northern Gulf of Mexico Deepwater Bathymetry Grid from 3D Seismic
+    # https://www.boem.gov/Gulf-of-Mexico-Deepwater-Bathymetry/
+    boem_dir = os.path.join(dataprep_dir, 'boem')
+    for fname, outname in [('BOEMbathyW_m.tif', 'BOEM_west'), ('BOEMbathyE_m.tif', 'BOEM_east')]:
+        if overwrite or not output_exists(outdir, outname):
+            metadata = create_memmap(os.path.join(boem_dir, fname), outdir, outname)
+            metadata['category'] = 'bathymetry'
+            metadata['bandinfo']['scale_factor'] = -1 * float(metadata['bandinfo']['scale_factor'])
+            metadata['bandinfo']['add_offset'] = -1 * float(metadata['bandinfo']['add_offset'])
+            json.dump(metadata, open(os.path.join(outdir, outname + '.json'), 'w'))
 
 
 def sdmpredictors2memmap(layers, overwrite=False):
@@ -107,14 +125,16 @@ load_layers(c("{0}"), datadir = "{1}")
 
 
 def combine_metadata():
-    # for all .pickle files combine into one pickle file called raster.metadata
+    # for all json files combine into one pickle file called raster.metadata
     rastersdir = os.path.join(config.datadir, 'rasters')
     allmeta = [json.load(open(p, 'r')) for p in glob.glob(os.path.join(rastersdir, "*.json"))]
     json.dump(allmeta, open(os.path.join(rastersdir, 'rasters.metadata'), 'w'))
+
 
 if __name__ == '__main__':
     emodnet2memmap()
     gebco2memmap()
     gbr100v5_memmap()
+    # boem2memmap() # different projection
     sdmpredictors2memmap(layers={'Temperature (sea surface)': ['BO2_tempmean_ss'], 'Salinity (sea surface)': ['BO2_salinitymean_ss']})
     combine_metadata()

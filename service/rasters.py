@@ -11,9 +11,9 @@ import config
 
 
 class Raster:
-    def __init__(self, rasterdir, metadata):  # id, category, path, dtype, shape, minx, miny, maxx, maxy, startdate=None, enddate=None, mindepth=None, maxdepth=None
+    def __init__(self, rasterdir, metadata):
         self.id = metadata['id']
-        self.category = metadata['category']
+        self.category = metadata['category'].lower()
         ncol, nrow = tuple(metadata['shape'])
         self.nrow = nrow
         self.ncol = ncol
@@ -28,7 +28,9 @@ class Raster:
         self.hasdepth = self.mindepth and self.maxdepth
         self.bandinfo = metadata['bandinfo']
         self.rasterinfo = metadata['rasterinfo']
-        self.nodata = float(metadata['nodata'])
+        nodata = float(metadata['nodata'])
+        nodata_delta = abs(nodata * 1e-7)
+        self.nodata = nodata-nodata_delta, nodata+nodata_delta
         self.add_offset = float(self.bandinfo.get('add_offset',0))
         self.scale_factor = float(self.bandinfo.get('scale_factor',1.0))
 
@@ -48,14 +50,14 @@ class Raster:
     def get_values(self, x, y):
         r,c = self.get_rows_cols(x, y)
         values = self.data[r,c]
-        okdata = (values <= self.nodata-1e-12) | (values >= self.nodata+1e-12)
+        okdata = (values <= self.nodata[0]) | (values >= self.nodata[1]) # check outside nodata
         return (values*self.scale_factor+self.add_offset), okdata
 
     def __str__(self):
         return str(self.__dict__)
 
 
-def get_raster_values(points):
+def get_values(points):
     output = [{} for _ in points]
     x, y = points.T
     ids = np.array(range(len(x)))
@@ -69,20 +71,29 @@ def get_raster_values(points):
                 id_ok = ids_remaining[which][okdata]
                 if len(id_ok) > 0:
                     for i, id in enumerate(id_ok):
-                        output[id][category] = values[i]
+                        output[id][category] = float(values[i])
 
                     ids_remaining = np.array(list(set(ids_remaining) - set(id_ok)))
                     if len(ids_remaining) > 0:
                         x_remaining = x[ids_remaining]
                         y_remaining = y[ids_remaining]
+                    else:
+                        break
     return output
 
+
 rasterdir = os.path.join(config.datadir, 'rasters')
-rasters = map(lambda d:Raster(rasterdir, d), json.load(open(os.path.join(rasterdir, 'rasters.metadata'), 'r')))
+rasters = [Raster(rasterdir, d) for d in json.load(open(os.path.join(rasterdir, 'rasters.metadata'), 'r'))]
+rasters = [r for r in rasters if r.id not in [u'BOEM_east', u'BOEM_west']] # TODO handle projection different of the BOEM data (+proj=utm +zone=16 +datum=NAD27 +units=us-ft +no_defs +ellps=clrk66 +nadgrids=@conus,@alaska,@ntv2_0.gsb,@ntv1_can.dat)
 rasters.sort(key=lambda r: math.fabs(r.xres))  # smaller xres = higher precision so ranked first in the list of rasters
-categories = set(map(lambda r: r.category, rasters))
+categories = set([r.category for r in rasters])
 
 if __name__ == "__main__":
+    points = np.array([[2.890605926513672, 51.241779327392585]])
+    v = get_values(points)
+
+    #get_values(np.array([[-49, 51]]))
+
     def _get_test_points():
         import psycopg2
         conn = psycopg2.connect("dbname=xylookup user=postgres port=5432 password=postgres")
@@ -93,5 +104,5 @@ if __name__ == "__main__":
     points = _get_test_points()
     print("Ready for rasters :-)")
     import cProfile
-    v = get_raster_values(points)
+    v = get_values(points)
     cProfile.runctx('get_raster_values(points)', globals(), locals())
