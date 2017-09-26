@@ -108,3 +108,8 @@ ENV/
 
 # yep profiling
 *.py.prof
+
+# R files
+.RData
+.Rhistory
+

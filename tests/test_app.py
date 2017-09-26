@@ -2,6 +2,7 @@ from falcon import testing
 import falcon
 import pytest
 import msgpack
+import csv
 import service.app
 
 # Terminal run: python -m pytest
@@ -136,11 +137,28 @@ def test_lookup_1_msgpack_point_works(client):
 
 
 def test_compare_results_r(client):
-    import os
-    print(os.getcwd())
-    # TODO implement test
-    pass
-    #rdata = load_csv()
+    def assert_value(d, key, expectedv, tolerance):
+        if key in d:
+            assert grids[key] == pytest.approx(float(expectedv), tolerance), "wrong result point {0} {1}".format(i, points[i])
+        else:
+            assert expectedv == 'NA', "wrong result point {0} {1}".format(i, points[i])
+    points = [] # x/y
+    pointvalues = [] # sst/sss/bathymetry
+    with open("./tests/r_testlookup.csv") as csvfile:
+        reader = csv.reader(csvfile, delimiter=",")
+        for i, row in enumerate(reader):
+            if i > 0:
+                points.append(row[0:2])
+                pointvalues.append(row[2:5])
+    results = simulate_msgpack_lookup(client, points)
+    data = msgpack.loads(results.content)
+    for i, actual in enumerate(data):
+        expected = pointvalues[i]
+        grids = actual['grids']
+        assert_value(grids, 'temperature (sea surface)', expected[0], 0.001)
+        assert_value(grids, 'salinity (sea surface)', expected[1], 0.001)
+        assert_value(grids, 'bathymetry', expected[2], 0.1)
+
 
 
 # def test_returns_correct_values(client):

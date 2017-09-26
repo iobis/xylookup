@@ -1,6 +1,9 @@
 library(raster)
 library(sdmpredictors)
 
+setwd("~/a/projects/xylookup/tests")
+options(sdmpredictors_datadir="/Users/samuel/a/data/sdmpredictors")
+
 create_test_points <- function(seed = 42) {
   set.seed(seed)
   x <- runif(1000000, -180, 180)
