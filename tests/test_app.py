@@ -14,7 +14,7 @@ def client():
 
 
 def simulate_msgpack_lookup(client, points):
-    packed = msgpack.dumps(points)
+    packed = msgpack.dumps({'points': points})
     return client.simulate_post('/lookup', body=packed, headers={'Content-Type': falcon.MEDIA_MSGPACK})
 
 
@@ -63,16 +63,23 @@ def test_post_json_invalid(client):
     assert "JSON was incorrect" in result.json["description"]
 
 
-def test_post_json_empty(client):
+def test_post_json_not_dict(client):
     result = client.simulate_post('/lookup', body='[]')
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
-    assert "No coordinates provided" in result.json["description"]
+    assert "dictionary" in result.json["description"]
+
+
+def test_post_json_empty(client):
+    result = client.simulate_post('/lookup', body='{"points":[]}')
+    assert result.status_code == 400
+    assert "Invalid" in result.json["title"]
+    assert "No points provided" in result.json["description"]
 
 
 def test_post_json_xy_outside_world(client):
-    result = client.simulate_post('/lookup', body="""
-    [[0, 1], [0, -1], [0, 0], [181, 0]]""")
+    result = client.simulate_post('/lookup', body="""{"points":
+    [[0, 1], [0, -1], [0, 0], [181, 0]]}""")
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
     assert "xmin" in result.json["description"]
@@ -86,15 +93,23 @@ def test_post_msgpack_invalid(client):
     assert "msgpack was incorrect" in result.json["description"]
 
 
-def test_post_msgpack_empty(client):
-    result = simulate_msgpack_lookup(client, [])
+def test_post_msgpack_not_dict(client):
+    packed = msgpack.dumps("not a dictionary")
+    result = client.simulate_post('/lookup', body=packed, headers={'Content-Type': falcon.MEDIA_MSGPACK})
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
-    assert "No coordinates provided" in result.json["description"]
+    assert "dictionary" in result.json["description"]
+
+
+def test_post_msgpack_empty(client):
+    result = simulate_msgpack_lookup(client, points=[])
+    assert result.status_code == 400
+    assert "Invalid" in result.json["title"]
+    assert "No points provided" in result.json["description"]
 
 
 def test_post_msgpack_xy_outside_world(client):
-    result = simulate_msgpack_lookup(client, [[0, 1], [0, -1], [0, 0], [181, 0]])
+    result = simulate_msgpack_lookup(client, points=[[0, 1], [0, -1], [0, 0], [181, 0]])
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
     assert "xmin" in result.json["description"]
@@ -102,7 +117,7 @@ def test_post_msgpack_xy_outside_world(client):
 
 
 def test_post_msgpack_xy_outside_world(client):
-    result = simulate_msgpack_lookup(client, [['0', '1'], [0, -1], [0, 0], [181, 0]])
+    result = simulate_msgpack_lookup(client, points=[['0', '1'], [0, -1], [0, 0], [181, 0]])
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
     assert "xmin" in result.json["description"]
@@ -121,7 +136,6 @@ def check_1_values(data):
 
 
 def test_lookup_1_json_point_works(client):
-    #x, y = 2.900152, 51.229310
     x, y = 2.890605926513672, 51.241779327392585
     result = client.simulate_get('/lookup', query_string='x={0}&y={1}'.format(x, y))
     assert result.status_code == 200
@@ -160,6 +174,25 @@ def test_compare_results_r(client):
         assert_value(grids, 'bathymetry', expected[2], 0.1)
 
 
+def test_get_results_filtering(client):
+    pass
+
+
+def test_post_json_results_filtering(client):
+    pass
+
+
+@pytest.mark.parametrize("extra_params", [{}, {'areas': False}, {'grids': False}, {'shoredistance': False},
+                                          {'areas': False, 'grids': False, 'shoredistance': False}])
+def test_post_msgpack_results_filtering(client, extra_params):
+    d = {'points': [[2.890605926513672, 51.241779327392585]]}
+    d.update(extra_params)
+    packed = msgpack.dumps(d)
+    results = client.simulate_post('/lookup', body=packed, headers={'Content-Type': falcon.MEDIA_MSGPACK})
+    data = msgpack.loads(results.content)[0]
+    assert extra_params.get('areas', True) == ('areas' in data)
+    assert extra_params.get('grids', True) == ('grids' in data)
+    assert extra_params.get('shoredistance', True) == ('shoredistance' in data)
 
 # def test_returns_correct_values(client):
 #     points = [[0,0],['0','0']]
