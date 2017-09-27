@@ -2,6 +2,7 @@ from falcon import testing
 import falcon
 import pytest
 import msgpack
+import json
 import csv
 import service.app
 
@@ -174,12 +175,33 @@ def test_compare_results_r(client):
         assert_value(grids, 'bathymetry', expected[2], 0.1)
 
 
-def test_get_results_filtering(client):
-    pass
+@pytest.mark.parametrize("extra_params", [{}, {'areas': False}, {'grids': False}, {'shoredistance': False},
+                                          {'areas': False, 'grids': False, 'shoredistance': False}])
+def test_get_results_filtering(client, extra_params):
+    x, y = 2.890605926513672, 51.241779327392585
+    extra = '&'.join([k + '=' + str(v).lower() for k,v in extra_params.items()])
+    if extra:
+        extra = '&' + extra
+    result = client.simulate_get('/lookup', query_string='x={0}&y={1}'.format(x, y) + extra)
+    assert result.status_code == 200
+    data = result.json[0]
+    assert extra_params.get('areas', True) == ('areas' in data)
+    assert extra_params.get('grids', True) == ('grids' in data)
+    assert extra_params.get('shoredistance', True) == ('shoredistance' in data)
 
 
-def test_post_json_results_filtering(client):
-    pass
+@pytest.mark.parametrize("extra_params", [{}, {'areas': False}, {'grids': False}, {'shoredistance': False},
+                                          {'areas': False, 'grids': False, 'shoredistance': False}])
+def test_post_json_results_filtering(client, extra_params):
+    d = {'points': [[2.890605926513672, 51.241779327392585]]}
+    d.update(extra_params)
+    body = json.dumps(d)
+    result = client.simulate_post('/lookup', body=body)
+    assert result.status_code == 200
+    data = result.json[0]
+    assert extra_params.get('areas', True) == ('areas' in data)
+    assert extra_params.get('grids', True) == ('grids' in data)
+    assert extra_params.get('shoredistance', True) == ('shoredistance' in data)
 
 
 @pytest.mark.parametrize("extra_params", [{}, {'areas': False}, {'grids': False}, {'shoredistance': False},
