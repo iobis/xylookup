@@ -1,4 +1,3 @@
-
 import lookup
 import falcon
 import json
@@ -11,7 +10,7 @@ class LookupResource(object):
     def _prepare_response(results, req, resp):
         if req.client_accepts_msgpack and req.content_type and req.content_type.lower() == falcon.MEDIA_MSGPACK:
             try:
-                resp.data = msgpack.packb(results, use_bin_type=True)
+                resp.data = msgpack.packb(results, use_bin_type=False)
                 resp.content_type = falcon.MEDIA_MSGPACK
                 resp.status = falcon.HTTP_200
             except Exception as ex:

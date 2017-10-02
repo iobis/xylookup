@@ -1,6 +1,8 @@
+import config
+
 
 def get_areas(cur, points, pointstable):
-    tablecols = {'final_grid5': ['sp_id', 'name', 'country', 'type', 'base']}
+    tablecols = config.areas
     results = [[] for _ in xrange(len(points))]
     for table, columns in tablecols.iteritems():
         cur.execute("""SELECT pts.id, {} FROM {} pts, {} grid 

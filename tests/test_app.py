@@ -215,20 +215,3 @@ def test_post_msgpack_results_filtering(client, extra_params):
     assert extra_params.get('areas', True) == ('areas' in data)
     assert extra_params.get('grids', True) == ('grids' in data)
     assert extra_params.get('shoredistance', True) == ('shoredistance' in data)
-
-# def test_returns_correct_values(client):
-#     points = [[0,0],['0','0']]
-#     expected_final_area_names = [['North Atlantic', '']]
-#     results = client.simulate_post('/lookup', body=json.dumps(points))
-#     # TODO: continue TEST
-#     """
-#     [[{"layer": "final_grid5", "name": "South Atlantic", "country": null, "sp_id": "198", "base": "T", "type": "abnj"}, {"layer": "final_grid5", "name": "North Atlantic", "country": null, "sp_id": "157", "base": "T", "type": "abnj"}, {"layer": "final_grid5", "name": "ABNJ: all", "country": null, "sp_id": "abnj", "base": "F", "type": "abnj"}, "Salinity (sea surface)", "Temperature (sea surface)", "bathymetry", 572806.23312090512]]
-#     """
-
-# THINGS TO TEST
-# 2) correct values areas
-# 3) correct values landdistance
-# 4) correct values rasters, check nodata works for all rasters
-# 5) msgpack (receive)
-# 7) POST doc parameter validation
-

@@ -6,10 +6,11 @@ import uuid
 import areas
 import rasters
 import shoredistance
+import config
 import numpy as np
 from StringIO import StringIO
 
-conn = psycopg2.connect("dbname=xylookup user=postgres port=5432 password=postgres")
+conn = psycopg2.connect(config.connstring)
 
 
 # TODO Add support for datetime
@@ -52,7 +53,7 @@ def lookup(req):
             try:
                 data = json.loads(raw_data, encoding='utf-8')
             except ValueError:
-                raise falcon.HTTPError(falcon.HTTP_400, 'Invalid JSON', 'Could not decode the request body. The ''JSON was incorrect.'+str(raw_data))
+                raise falcon.HTTPError(falcon.HTTP_400, 'Invalid JSON', 'Could not decode the request body. The ''JSON was incorrect.')
         if not data or len(data) == 0 or type(data) is not dict:
             raise falcon.HTTPInvalidParam('Request POST data should be a JSON object/Python dictionary/R list', 'POST body')
         points = data.get("points", None)

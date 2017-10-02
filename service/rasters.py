@@ -5,9 +5,6 @@ import json
 import numpy as np
 from datetime import datetime
 import config
-# INPUT: set of x,y coordinates (+time?, +depth?)
-# DATA: set of rasters with metadata (id, extent, time?, depth?) grouped in categories with a hierarchy e.g. first emodnet then gebco bathymetry)
-# OUTPUT: for each point the matched raster category, raster id and the value
 
 
 class Raster:
@@ -84,25 +81,25 @@ def get_values(points):
 
 rasterdir = os.path.join(config.datadir, 'rasters')
 rasters = [Raster(rasterdir, d) for d in json.load(open(os.path.join(rasterdir, 'rasters.metadata'), 'r'))]
-rasters = [r for r in rasters if r.id not in [u'BOEM_east', u'BOEM_west']] # TODO handle projection different of the BOEM data (+proj=utm +zone=16 +datum=NAD27 +units=us-ft +no_defs +ellps=clrk66 +nadgrids=@conus,@alaska,@ntv2_0.gsb,@ntv1_can.dat)
+rasters = [r for r in rasters if r.id not in [u'BOEM_east', u'BOEM_west']] # TODO handle rasters with a different projection e.g. BOEM data (+proj=utm +zone=16 +datum=NAD27 +units=us-ft +no_defs +ellps=clrk66 +nadgrids=@conus,@alaska,@ntv2_0.gsb,@ntv1_can.dat)
 rasters.sort(key=lambda r: math.fabs(r.xres))  # smaller xres = higher precision so ranked first in the list of rasters
 categories = set([r.category for r in rasters])
 
 if __name__ == "__main__":
-    points = np.array([[2.890605926513672, 51.241779327392585]])
-    v = get_values(points)
+    pts = np.array([[2.890605926513672, 51.241779327392585]])
+    v = get_values(pts)
 
-    #get_values(np.array([[-49, 51]]))
+    # get_values(np.array([[-49, 51]]))
 
     def _get_test_points():
         import psycopg2
         conn = psycopg2.connect("dbname=xylookup user=postgres port=5432 password=postgres")
         cur = conn.cursor()
         cur.execute("SELECT x, y FROM test_points_1000000")
-        points = cur.fetchall()
-        return [tuple(point) for point in points]
-    points = _get_test_points()
+        pts = cur.fetchall()
+        return [tuple(point) for point in pts]
+    pts = _get_test_points()
     print("Ready for rasters :-)")
     import cProfile
-    v = get_values(points)
+    v = get_values(pts)
     cProfile.runctx('get_raster_values(points)', globals(), locals())

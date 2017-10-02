@@ -131,8 +131,6 @@ def _on_land(cur, pointstable, npoints):
 
 
 def get_shoredistance(cur, points, pointstable):
-    # TODO: use function attributes to store the _tree, _coastpoints and _coastlines isntead of using globals
-    if not _tree: _init()
     distances = np.zeros(len(points))
     chunksize = 1000
     chunks = [points[i:i + chunksize] for i in range(0, len(points), chunksize)]
@@ -141,6 +139,10 @@ def get_shoredistance(cur, points, pointstable):
 
     onland = _on_land(cur, pointstable, len(points))
     return np.round(distances * onland)
+
+
+_init()  # Initialize the _tree, _coatlines and _coast_points data structures (slow but necessary)
+
 
 if __name__ == "__main__":
     def _get_test_points():
