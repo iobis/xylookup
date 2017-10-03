@@ -125,6 +125,7 @@ def _on_land(cur, pointstable, npoints):
      WHERE all_water.geom IS NULL
     """.format(pointstable))
     ids_onland = cur.fetchall()
+    ids_onland = [id[0] for id in ids_onland]  # tuple to element
     onland = np.ones(npoints)
     onland[ids_onland] = -1
     return onland
@@ -136,7 +137,6 @@ def get_shoredistance(cur, points, pointstable):
     chunks = [points[i:i + chunksize] for i in range(0, len(points), chunksize)]
     for i, chunk in enumerate(chunks):
         distances[i*chunksize:((i+1)*chunksize)] = _getcoastlinedistance(chunk, _tree, _coastpoints, _coastlines)
-
     onland = _on_land(cur, pointstable, len(points))
     return np.round(distances * onland)
 
@@ -155,6 +155,8 @@ if __name__ == "__main__":
     tp = _get_test_points()
     print("Ready for landdistance :-)")
 
+    #http: // localhost:8000 / lookup?x = 2.922825, 2.918780, 0 & y = 51.236716, 51.237912, 0 & shoredistance = 1 & grids = 0 & areas = 0
+    tp = [[2.922825,51.236716], [2.918780,51.237912]]
     def landdistance():
         positions = tp
         chunksize = 1000

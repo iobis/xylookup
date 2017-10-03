@@ -5,6 +5,7 @@ import msgpack
 import json
 import csv
 import service.app
+import service.config as config
 
 # Terminal run: python -m pytest
 
@@ -127,7 +128,7 @@ def test_post_msgpack_xy_outside_world(client):
 
 def check_1_values(data):
     data = data[0]
-    assert len(data['areas']) > 0
+    assert len(data['areas']) > 0 and len(data['areas'][config.areas.keys()[0]]) > 0
     assert len(data['grids']) > 0
     assert 1680 < data['shoredistance'] < 1690
     grids = data['grids']
@@ -140,6 +141,8 @@ def test_lookup_1_json_point_works(client):
     x, y = 2.890605926513672, 51.241779327392585
     result = client.simulate_get('/lookup', query_string='x={0}&y={1}'.format(x, y))
     assert result.status_code == 200
+    print(result.content)
+    print(result.json)
     data = result.json
     check_1_values(data)
 
