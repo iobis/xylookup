@@ -4,15 +4,17 @@ import pytest
 import msgpack
 import json
 import csv
-import service.app
-import service.config as config
+import sys
+sys.path.append("service")
+import app
+import config
 
 # Terminal run: python -m pytest
 
 
 @pytest.fixture()
 def client():
-    return testing.TestClient(service.app.create())
+    return testing.TestClient(app.create())
 
 
 def simulate_msgpack_lookup(client, points):
