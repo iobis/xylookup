@@ -1,5 +1,5 @@
-import json
-import msgpack
+import simplejson as json
+import umsgpack as msgpack
 import falcon
 import psycopg2
 import uuid
@@ -46,19 +46,19 @@ def lookup(req):
         try:
             raw_data = req.stream.read()
         except Exception as ex:
-            raise falcon.HTTPError(falcon.HTTP_400, 'Error reading data from POST', ex.message)
+            raise falcon.HTTPError(falcon.HTTP_400, 'Error reading data from POST', str(ex))
 
         if req.content_type and req.content_type.lower() == falcon.MEDIA_MSGPACK:
             try:
                 data = msgpack.unpackb(raw_data, use_list=False)
-            except ValueError:
-                raise falcon.HTTPError(falcon.HTTP_400, 'Invalid msgpack', 'Could not decode the request body. The ''msgpack was incorrect.')
+            except Exception:
+                raise falcon.HTTPError(falcon.HTTP_400, 'Invalid msgpack', 'Could not decode the request body. The msgpack was incorrect.')
         else:
             try:
-                data = json.loads(raw_data, encoding='utf-8')
+                data = json.loads(raw_data)
             except ValueError:
                 raise falcon.HTTPError(falcon.HTTP_400, 'Invalid JSON', 'Could not decode the request body. The ''JSON was incorrect.')
-        if not data or len(data) == 0 or type(data) is not dict:
+        if not data or type(data) is not dict or len(data) == 0:
             raise falcon.HTTPInvalidParam('Request POST data should be a JSON object/Python dictionary/R list', 'POST body')
         points = data.get("points", None)
         if not points or len(points) == 0:
@@ -104,7 +104,7 @@ def lookup(req):
             if pshoredistance:
                 result['shoredistance'] = shoredists[idx]
     except Exception as ex:
-        raise falcon.HTTPError(falcon.HTTP_400, 'Error looking up data for provided points', ex.message)
+        raise falcon.HTTPError(falcon.HTTP_400, 'Error looking up data for provided points', str(ex))
     finally:
         conn.rollback()
     return results

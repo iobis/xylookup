@@ -1,7 +1,7 @@
 from falcon import testing
 import falcon
 import pytest
-import msgpack
+import umsgpack as msgpack
 import json
 import csv
 import service.app as app
@@ -128,7 +128,7 @@ def test_post_msgpack_xy_outside_world(client):
 
 def check_1_values(data):
     data = data[0]
-    assert len(data['areas']) > 0 and len(data['areas'][config.areas.keys()[0]]) > 0
+    assert len(data['areas']) > 0 and len(data['areas'][list(config.areas.keys())[0]]) > 0
     assert len(data['grids']) > 0
     assert 1680 < data['shoredistance'] < 1690
     grids = data['grids']
