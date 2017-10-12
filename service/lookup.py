@@ -76,7 +76,7 @@ def lookup(req):
             raise falcon.HTTPInvalidParam('Missing parameters x and/or y', 'x/y')
         elif len(x) != len(y):
             raise falcon.HTTPInvalidParam('Length of x parameter is different from length of y', 'x/y')
-        points = zip(x, y)
+        points = list(zip(x, y))
 
     points = np.array(points)
     try:
