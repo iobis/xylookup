@@ -5,6 +5,7 @@ import service.config as config
 
 _coastlines, _coastpoints, _tree = None, None, None
 
+
 def _init():
     v = '50'  # '5' for higher resolution
     global _coastlines, _coastpoints, _tree
@@ -22,7 +23,7 @@ def _load_coastlines(path):
                 featuredict = json.loads(line)
                 coordinates = featuredict["coordinates"]
                 if len(coordinates) == 1:
-                    print fid, len(featuredict["coordinates"]), "Should be more than 1 xy pair in a LineString"
+                    print(fid, len(featuredict["coordinates"]), "Should be more than 1 xy pair in a LineString")
                 p = np.array([tuple(xy) for xy in coordinates])
                 points.append(p)
                 pointsoffset += len(p)
@@ -30,7 +31,7 @@ def _load_coastlines(path):
                 if fid > 1 and fid % 100000 == 0:
                     gc.collect()
         except:
-            print fid
+            print(fid)
         gc.collect()
         return np.concatenate(points), np.array(coastlines)
 
@@ -163,7 +164,7 @@ if __name__ == "__main__":
             try:
                 _getcoastlinedistance(chunk, _tree, _coastpoints, _coastlines)
             except:
-                print "error " + str(i)
+                print("error " + str(i))
 
     import cProfile
     cProfile.runctx('landdistance()', globals(), locals())
