@@ -4,7 +4,11 @@ import falcon
 import psycopg2
 import uuid
 import numpy as np
-from StringIO import StringIO
+import sys
+if sys.version_info[0] == 2:
+    from StringIO import StringIO
+else:
+    from io import StringIO
 import service.areas as areas
 import service.rasters as rasters
 import service.shoredistance as shoredistance
