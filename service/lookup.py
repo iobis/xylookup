@@ -3,12 +3,12 @@ import msgpack
 import falcon
 import psycopg2
 import uuid
+import numpy as np
+from StringIO import StringIO
 import service.areas as areas
 import service.rasters as rasters
 import service.shoredistance as shoredistance
-import config
-import numpy as np
-from StringIO import StringIO
+import service.config as config
 
 conn = psycopg2.connect(config.connstring)
 
