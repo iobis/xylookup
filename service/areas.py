@@ -1,4 +1,4 @@
-import config
+import service.config as config
 
 
 def get_areas(cur, points, pointstable):

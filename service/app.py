@@ -1,8 +1,7 @@
-import lookup
 import falcon
 import json
 import msgpack
-# VERSION 1: return all data (no filtering)
+import service.lookup as lookup
 
 
 class LookupResource(object):

@@ -1,11 +1,9 @@
-import math, json
+import math, json, gc, os
 import numpy as np
 from scipy.spatial import cKDTree
-import gc
-import config
-import os
-_coastlines, _coastpoints, _tree = None, None, None
+import service.config as config
 
+_coastlines, _coastpoints, _tree = None, None, None
 
 def _init():
     v = '50'  # '5' for higher resolution

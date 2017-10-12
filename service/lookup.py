@@ -3,9 +3,9 @@ import msgpack
 import falcon
 import psycopg2
 import uuid
-import areas
-import rasters
-import shoredistance
+import service.areas as areas
+import service.rasters as rasters
+import service.shoredistance as shoredistance
 import config
 import numpy as np
 from StringIO import StringIO

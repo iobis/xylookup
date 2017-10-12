@@ -4,7 +4,7 @@ import os
 import json
 import numpy as np
 from datetime import datetime
-import config
+import service.config as config
 
 
 class Raster:

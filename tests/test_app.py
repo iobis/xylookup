@@ -4,10 +4,8 @@ import pytest
 import msgpack
 import json
 import csv
-import sys
-sys.path.append("service")
-import app
-import config
+import service.app as app
+import service.config as config
 
 # Terminal run: python -m pytest
 
