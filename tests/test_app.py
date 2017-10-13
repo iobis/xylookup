@@ -21,6 +21,7 @@ def simulate_msgpack_lookup(client, points):
 
 
 def test_xy_different_length(client):
+    print('test_xy_different_length')
     result = client.simulate_get('/lookup', query_string = "x=3,4&y=2")
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -28,6 +29,7 @@ def test_xy_different_length(client):
 
 
 def test_xy_empty(client):
+    print('test_xy_empty')
     result = client.simulate_get('/lookup', query_string="x=&y=")
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -35,6 +37,7 @@ def test_xy_empty(client):
 
 
 def test_xy_missing(client):
+    print('test_xy_missing')
     result = client.simulate_get('/lookup')
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -43,6 +46,7 @@ def test_xy_missing(client):
 
 @pytest.mark.parametrize("x,y", [(0,91),(0,-91),(-181,0),(181,0)])
 def test_xy_outside_world(client, x, y):
+    print('test_xy_outside_world')
     result = client.simulate_get('/lookup', query_string='x={0}&y={1}'.format(x,y))
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -52,6 +56,7 @@ def test_xy_outside_world(client, x, y):
 
 @pytest.mark.parametrize("x,y", [('a',0),(0,'b'),('0,0','1,b'),('1,b','0,0')])
 def test_xy_not_numeric(client, x, y):
+    print('test_xy_not_numeric')
     result = client.simulate_get('/lookup', query_string='x={0}&y={1}'.format(x, y))
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -59,6 +64,7 @@ def test_xy_not_numeric(client, x, y):
 
 
 def test_post_json_invalid(client):
+    print('test_post_json_invalid')
     result = client.simulate_post('/lookup', body='')
     assert result.status_code == 400
     assert "Invalid JSON" in result.json["title"]
@@ -66,6 +72,7 @@ def test_post_json_invalid(client):
 
 
 def test_post_json_not_dict(client):
+    print('test_post_json_not_dict')
     result = client.simulate_post('/lookup', body='[]')
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -73,6 +80,7 @@ def test_post_json_not_dict(client):
 
 
 def test_post_json_empty(client):
+    print('test_post_json_empty')
     result = client.simulate_post('/lookup', body='{"points":[]}')
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -80,6 +88,7 @@ def test_post_json_empty(client):
 
 
 def test_post_json_xy_outside_world(client):
+    print('test_post_json_xy_outside_world')
     result = client.simulate_post('/lookup', body="""{"points":
     [[0, 1], [0, -1], [0, 0], [181, 0]]}""")
     assert result.status_code == 400
@@ -89,6 +98,7 @@ def test_post_json_xy_outside_world(client):
 
 
 def test_post_msgpack_invalid(client):
+    print('test_post_msgpack_invalid')
     result = client.simulate_post('/lookup', body='', headers={'Content-Type': 'application/msgpack'})
     assert result.status_code == 400
     assert "Invalid msgpack" in result.json["title"]
@@ -96,6 +106,7 @@ def test_post_msgpack_invalid(client):
 
 
 def test_post_msgpack_not_dict(client):
+    print('test_post_msgpack_not_dict')
     packed = msgpack.dumps("not a dictionary")
     result = client.simulate_post('/lookup', body=packed, headers={'Content-Type': falcon.MEDIA_MSGPACK})
     assert result.status_code == 400
@@ -104,6 +115,7 @@ def test_post_msgpack_not_dict(client):
 
 
 def test_post_msgpack_empty(client):
+    print('test_post_msgpack_empty')
     result = simulate_msgpack_lookup(client, points=[])
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -111,6 +123,7 @@ def test_post_msgpack_empty(client):
 
 
 def test_post_msgpack_xy_outside_world(client):
+    print('test_post_msgpack_xy_outside_world')
     result = simulate_msgpack_lookup(client, points=[[0, 1], [0, -1], [0, 0], [181, 0]])
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -119,6 +132,7 @@ def test_post_msgpack_xy_outside_world(client):
 
 
 def test_post_msgpack_xy_outside_world(client):
+    print('test_post_msgpack_xy_outside_world')
     result = simulate_msgpack_lookup(client, points=[['0', '1'], [0, -1], [0, 0], [181, 0]])
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -138,6 +152,7 @@ def check_1_values(data):
 
 
 def test_lookup_1_json_point_works(client):
+    print('test_lookup_1_json_point_works')
     x, y = 2.890605926513672, 51.241779327392585
     result = client.simulate_get('/lookup', query_string='x={0}&y={1}'.format(x, y))
     assert result.status_code == 200
@@ -148,6 +163,7 @@ def test_lookup_1_json_point_works(client):
 
 
 def test_lookup_1_msgpack_point_works(client):
+    print('test_lookup_1_msgpack_point_works')
     result = simulate_msgpack_lookup(client, [[2.890605926513672, 51.241779327392585]])
     assert result.status_code == 200
     data = msgpack.loads(result.content)
@@ -155,6 +171,7 @@ def test_lookup_1_msgpack_point_works(client):
 
 
 def test_compare_results_r(client):
+    print('test_compare_results_r')
     def assert_value(d, key, expectedv, tolerance):
         if key in d:
             assert grids[key] == pytest.approx(float(expectedv), tolerance), "wrong result point {0} {1}".format(i, points[i])
@@ -181,6 +198,7 @@ def test_compare_results_r(client):
 @pytest.mark.parametrize("extra_params", [{}, {'areas': False}, {'grids': False}, {'shoredistance': False},
                                           {'areas': False, 'grids': False, 'shoredistance': False}])
 def test_get_results_filtering(client, extra_params):
+    print('test_get_results_filtering')
     x, y = 2.890605926513672, 51.241779327392585
     extra = '&'.join([k + '=' + str(v).lower() for k,v in extra_params.items()])
     if extra:
@@ -196,6 +214,7 @@ def test_get_results_filtering(client, extra_params):
 @pytest.mark.parametrize("extra_params", [{}, {'areas': False}, {'grids': False}, {'shoredistance': False},
                                           {'areas': False, 'grids': False, 'shoredistance': False}])
 def test_post_json_results_filtering(client, extra_params):
+    print('test_post_json_results_filtering')
     d = {'points': [[2.890605926513672, 51.241779327392585]]}
     d.update(extra_params)
     body = json.dumps(d)
@@ -210,6 +229,7 @@ def test_post_json_results_filtering(client, extra_params):
 @pytest.mark.parametrize("extra_params", [{}, {'areas': False}, {'grids': False}, {'shoredistance': False},
                                           {'areas': False, 'grids': False, 'shoredistance': False}])
 def test_post_msgpack_results_filtering(client, extra_params):
+    print('test_post_msgpack_results_filtering')
     d = {'points': [[2.890605926513672, 51.241779327392585]]}
     d.update(extra_params)
     packed = msgpack.dumps(d)
