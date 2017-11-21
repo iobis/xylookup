@@ -5,16 +5,16 @@ Webservice for looking up environmental and societal spatial information based o
 
 Get all data for a point as json
 
-lookup?x=2.90&y=51.2
+http://api.iobis.org/xylookup?x=2.90&y=51.2
 
 Get all data for multiple points as json
 
-lookup?x=2.90,2.1&y=51.2,51.1
+http://api.iobis.org/xylookup?x=2.90,2.1&y=51.2,51.1
 
 Filtering the results can be done by excluding the different categories(`areas`, `shoredistance`, `grids`) e.g.
 to return results without the distance to the shoreline:
 
-lookup?x=2.90&y=51.2&shoredistance=0
+http://api.iobis.org/xylookup?x=2.90&y=51.2&shoredistance=0
 
 Note that msgpack data can also be used for sending/receiving data.
 

@@ -144,7 +144,7 @@ def check_1_values(data):
     data = data[0]
     assert len(data['areas']) > 0 and len(data['areas'][list(config.areas.keys())[0]]) > 0
     assert len(data['grids']) > 0
-    assert 1680 < data['shoredistance'] < 1690
+    assert 1680 < data['shoredistance'] < 1720
     grids = data['grids']
     assert grids['temperature (sea surface)'] == pytest.approx(12.475, 0.001)
     assert grids['salinity (sea surface)'] == pytest.approx(32.918, 0.001)

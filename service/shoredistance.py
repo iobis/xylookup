@@ -7,7 +7,7 @@ _coastlines, _coastpoints, _tree = None, None, None
 
 
 def _init():
-    v = '50'  # '5' for higher resolution
+    v = '5'  # '50' for lower resolution
     global _coastlines, _coastpoints, _tree
     _coastpoints, _coastlines = _load_coastlines(os.path.join(config.datadir, "shoredistance/coastlines"+v+".jsonlines"))
     _tree = _build_kdtree(_coastpoints)
