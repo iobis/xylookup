@@ -238,3 +238,18 @@ def test_post_msgpack_results_filtering(client, extra_params):
     assert extra_params.get('areas', True) == ('areas' in data)
     assert extra_params.get('grids', True) == ('grids' in data)
     assert extra_params.get('shoredistance', True) == ('shoredistance' in data)
+
+
+def test_raster_edges(client):
+    print('test_raster_edges')
+    d = {'points': [[180, 0], [3, 55], [0, -90]], 'areas': False, 'shoredistance':False}
+    body = json.dumps(d)
+    result = client.simulate_post('/lookup', body=body)
+    assert result.status_code == 200
+    data = result.json
+    # for i, actual in enumerate(data):
+    #     expected = pointvalues[i]
+    #     grids = actual['grids']
+    #     assert_value(grids, 'temperature (sea surface)', expected[0], 0.001)
+    #     assert_value(grids, 'salinity (sea surface)', expected[1], 0.001)
+    #     assert_value(grids, 'bathymetry', expected[2], 0.1)

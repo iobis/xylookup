@@ -11,11 +11,11 @@ class Raster:
     def __init__(self, rasterdir, metadata):
         self.id = metadata['id']
         self.category = metadata['category'].lower()
-        ncol, nrow = tuple(metadata['shape'])
+        nrow, ncol = tuple(metadata['shape'])
         self.nrow = nrow
         self.ncol = ncol
         path = os.path.join(rasterdir, self.id + '.mmf')
-        self.data = np.memmap(path, dtype=metadata['dtype'], mode='r', shape=(ncol, nrow))
+        self.data = np.memmap(path, dtype=metadata['dtype'], mode='r', shape=(nrow, ncol))
         self.minx, self.miny = metadata['minx']-1e-12, metadata['miny']-1e-12  # 1e-12 to take care of edge cases
         self.maxx, self.maxy = metadata['maxx']+1e-12, metadata['maxy']+1e-12  # 1e-12 to take care of edge cases
         self.xres, self.yres = metadata['xres'], metadata['yres']
@@ -42,9 +42,12 @@ class Raster:
 
     def get_rows_cols(self, x, y):
         rows, cols = np.floor((y-self.maxy) / self.yres), np.floor((x-self.minx) / self.xres)
+        rows[rows == self.nrow] = self.nrow - 1
+        cols[cols == self.ncol] = self.ncol - 1
         return rows.astype(int), cols.astype(int)
 
     def get_values(self, x, y):
+        print(self.id)
         r,c = self.get_rows_cols(x, y)
         values = self.data[r,c]
         okdata = (values <= self.nodata[0]) | (values >= self.nodata[1]) # check outside nodata
@@ -86,7 +89,8 @@ rasters.sort(key=lambda r: math.fabs(r.xres))  # smaller xres = higher precision
 categories = set([r.category for r in rasters])
 
 if __name__ == "__main__":
-    pts = np.array([[2.890605926513672, 51.241779327392585]])
+    pts = np.array([[2.890605926513672, 51.241779327392585], [3, 55], [3, 54.999999],
+                    [0, -90], [0, -89.9999999]])
     v = get_values(pts)
 
     # get_values(np.array([[-49, 51]]))
