@@ -122,6 +122,9 @@ Then execute the following sql code in PostgreSQL:
 
 Run dataprep/rasters.py, it prepares both the data and metadata needed. Data is prepared by storing them as uncompressed binary numpy array files which are later on read by using memorymapped files.
 
+Some input source data will have to be downloaded manually such as the EMODnet and GEBCO bathymetry.
+
 ## Roadmap
 
-Add support for looking up data based on time and depth.
+Add support for looking up data based on time and depth.  
+Document the api using Swagger.  
