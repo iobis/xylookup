@@ -16,11 +16,15 @@
   },
   "private": true,
   "scripts": {
-    "deploy": "npm run build && deploy-to-gh-pages --update web_deploy",
+    "deploy": "npm-run-all clean dist gh-pages",
+    "gh-pages": "gh-pages -d dist",
     "build": "node ./scripts/build.js",
     "swagger": "swagger-repo",
     "test": "swagger-repo validate",
     "start": "gulp serve",
     "deploy-branch": "node ./scripts/deploy-branch.js"
+  },
+  "devDependencies": {
+    "gh-pages": "^1.0.0"
   }
 }
