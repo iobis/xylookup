@@ -21,7 +21,7 @@ Note that msgpack data can also be used for sending/receiving data.
 ## Dependencies
 
 - PostgreSQL and PostGIS (currently tested on 9.6 and 9.4)
-- Python 2.7 with
+- Python 2.7 or 3.6 with
     - falcon
     - numpy
     - msgpack
@@ -49,7 +49,7 @@ Note that msgpack data can also be used for sending/receiving data.
 
 ### final_grid5
 
-Startign from a the final.shp shapefile, perform the following steps:
+Starting from the final.shp shapefile, perform the following steps:
 
     D:\a\prog\PostgreSQL\9.6\bin\shp2pgsql -I -s 4326 final.shp final postgres > final.sql
     psql -d xylookup -U postgres -p 5433 -f final.sql
@@ -128,3 +128,34 @@ Some input source data will have to be downloaded manually such as the EMODnet a
 
 Add support for looking up data based on time and depth.  
 Document the api using Swagger.  
+
+# xylookup OpenAPI Specification
+[![Build Status](https://travis-ci.org/iobis/xylookup.svg?branch=master)](https://travis-ci.org/iobis/xylookup)
+
+## Links
+
+- Documentation(ReDoc): https://iobis.github.io/xylookup/
+- SwaggerUI: https://iobis.github.io/xylookup/swagger-ui/
+- Look full spec:
+    + JSON https://iobis.github.io/xylookup/swagger.json
+    + YAML https://iobis.github.io/xylookup/swagger.yaml
+- Preview spec version for branch `[branch]`: https://iobis.github.io/xylookup/preview/[branch]
+
+**Warning:** All above links are updated only after Travis CI finishes deployment
+
+## Working on specification
+### Install
+
+1. Install [Node JS](https://nodejs.org/)
+2. Clone repo and `cd`
+    + Run `npm install`
+
+### Usage
+
+1. Run `npm start`
+2. Checkout console output to see where local server is started. You can use all [links](#links) (except `preview`) by replacing https://iobis.github.io/xylookup/ with url from the message: `Server started <url>`
+3. Make changes using your favorite editor or `swagger-editor` (look for URL in console output)
+4. All changes are immediately propagated to your local server, moreover all documentation pages will be automagically refreshed in a browser after each change
+**TIP:** you can open `swagger-editor`, documentation and `swagger-ui` in parallel
+5. Once you finish with the changes you can run tests using: `npm test`
+6. Share you changes with the rest of the world by pushing to GitHub :smile:

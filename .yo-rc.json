@@ -1,0 +1,11 @@
+{
+  "generator-openapi-repo": {
+    "importExistingSpec": true,
+    "importedSpec": "swagger.yaml",
+    "name": "xylookup",
+    "repo": "iobis/xylookup",
+    "splitSpec": false,
+    "samples": true,
+    "installSwaggerUI": true
+  }
+}

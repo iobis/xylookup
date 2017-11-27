@@ -1,0 +1,111 @@
+swagger: '2.0'
+info:
+  description: >-
+    Webservice for looking up environmental and societal spatial information
+    based on coordinates.
+  version: 1.0.0
+  title: OBIS xylookup
+  termsOfService: 'http://www.iobis.org/data/policy/'
+  contact:
+    email: info@iobis.org
+  license:
+    name: MIT License
+    url: 'https://github.com/iobis/xylookup/blob/master/LICENSE.md'
+host: api.iobis.org
+tags:
+  - name: Coordinates
+    description: Lookup values for spatial coordinates
+    externalDocs:
+      description: Find out more
+      url: 'https://github.com/iobis/xylookup/'
+schemes:
+  - http
+paths:
+  /xylookup:
+    get:
+      tags:
+        - Coordinates
+      summary: ''
+      description: ''
+      operationId: xylookup_get
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: x
+          in: query
+          description: ''
+          required: true
+          type: array
+          minItems: 1
+          items:
+            type: number
+        - name: 'y'
+          in: query
+          description: ''
+          required: true
+          type: array
+          minItems: 1
+          items:
+            type: number
+        - name: areas
+          in: query
+          description: ''
+          required: false
+          type: boolean
+        - name: grids
+          in: query
+          description: ''
+          required: false
+          type: boolean
+        - name: shoredistance
+          in: query
+          description: ''
+          required: false
+          type: boolean
+      responses:
+        '400':
+          description: Invalid input
+    post:
+      tags:
+        - Coordinates
+      summary: ''
+      description: ''
+      operationId: xylookup_post
+      consumes:
+        - application/json
+        - application/msgpack
+      produces:
+        - application/json
+        - application/msgpack
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/QueryPoints'
+      responses:
+        '400':
+          description: Invalid input
+definitions:
+  Point2D:
+    type: array
+    maxItems: 2
+    minItems: 2
+    items:
+      type: number
+  QueryPoints:
+    type: object
+    properties:
+      points:
+        type: array
+        items:
+          $ref: '#/definitions/Point2D'
+      areas:
+        type: boolean
+      grids:
+        type: boolean
+      shoredistance:
+        type: boolean
