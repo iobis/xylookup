@@ -26,7 +26,7 @@
     "clean": "rimraf dist",
     "dist": "node ./scripts/build.js",
     "deploy": "npm-run-all clean dist gh-pages",
-    "gh-pages": "gh-pages -d dist",
+    "gh-pages": "gh-pages -d web_deploy",
     "test": "swagger-repo validate",
     "start": "npm-run-all --parallel app:*",
     "swagger": "swagger-repo"
