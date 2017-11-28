@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - "node"
 before_install:
-  - git config credential.helper "store --file=.git/credentials"; echo "https://gissolved:${GH_TOKEN}@github.com" > .git/credentials 2>/dev/null
+  - git config credential.helper "store --file=.git/credentials"; echo "https://obis-system:${GH_TOKEN}@github.com" > .git/credentials 2>/dev/null
   - git config --global user.email "s.bosch@unesco.org"
   - git config --global user.name "Samuel Bosch"
 deploy:
