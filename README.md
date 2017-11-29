@@ -158,4 +158,17 @@ Document the api using Swagger.
 4. All changes are immediately propagated to your local server, moreover all documentation pages will be automagically refreshed in a browser after each change
 **TIP:** you can open `swagger-editor`, documentation and `swagger-ui` in parallel
 5. Once you finish with the changes you can run tests using: `npm test`
-6. Share you changes with the rest of the world by pushing to GitHub :smile:
+6. Share you changes with the rest of the world by pushing to GitHub
+
+## Data references and acknowledgements
+
+Claus S., N. De Hauwere, B. Vanhoorne, F. Souza Dias, P. Oset García, F. Hernandez, and J. Mees (Flanders Marine Institute) (2017). MarineRegions.org.  
+
+The GEBCO_2014 Grid, version 20150318, http://www.gebco.net.  
+
+EMODnet Bathymetry Consortium (2016): EMODnet Digital Bathymetry (DTM). http://doi.org/10.12770/c7b53704-999d-4721-b1a3-04ec60c87238.  
+
+Tyberghein L, Verbruggen H, Pauly K, Troupin C, Mineur F, De Clerck O (2012) Bio-ORACLE: A global environmental dataset for marine species distribution modelling. Global Ecology and Biogeography, 21, 272–281.  
+
+Map data copyrighted OpenStreetMap contributors and available from https://www.openstreetmap.org.  
+    

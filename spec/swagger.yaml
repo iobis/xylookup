@@ -2,7 +2,20 @@ swagger: '2.0'
 info:
   description: >-
     Webservice for looking up environmental and societal spatial information
-    based on coordinates.
+    based on coordinates.  
+      
+    Data references and acknowledgements:  
+
+    Claus S., N. De Hauwere, B. Vanhoorne, F. Souza Dias, P. Oset García, F. Hernandez, and J. Mees (Flanders Marine Institute) (2017). MarineRegions.org.  
+
+    The GEBCO_2014 Grid, version 20150318, http://www.gebco.net.  
+
+    EMODnet Bathymetry Consortium (2016): EMODnet Digital Bathymetry (DTM). http://doi.org/10.12770/c7b53704-999d-4721-b1a3-04ec60c87238.  
+
+    Tyberghein L, Verbruggen H, Pauly K, Troupin C, Mineur F, De Clerck O (2012) Bio-ORACLE: A global environmental dataset for marine species distribution modelling. Global Ecology and Biogeography, 21, 272–281.  
+
+    Map data copyrighted OpenStreetMap contributors and available from https://www.openstreetmap.org.  
+    
   version: 1.0.0
   title: OBIS xylookup
   termsOfService: 'http://www.iobis.org/data/policy/'
@@ -12,21 +25,14 @@ info:
     name: MIT License
     url: 'https://github.com/iobis/xylookup/blob/master/LICENSE.md'
 host: api.iobis.org
-tags:
-  - name: Coordinates
-    description: Lookup values for spatial coordinates
-    externalDocs:
-      description: Find out more
-      url: 'https://github.com/iobis/xylookup/'
+externalDocs:
+  description: Find out more
+  url: 'https://github.com/iobis/xylookup/'
 schemes:
   - http
 paths:
   /xylookup:
     get:
-      tags:
-        - Coordinates
-      summary: ''
-      description: ''
       operationId: xylookup_get
       consumes:
         - application/json
@@ -35,7 +41,7 @@ paths:
       parameters:
         - name: x
           in: query
-          description: ''
+          description: 'x-coordinate (longitude)'
           required: true
           type: array
           minItems: 1
@@ -43,7 +49,7 @@ paths:
             type: number
         - name: 'y'
           in: query
-          description: ''
+          description: 'y-coordinate (latitude)'
           required: true
           type: array
           minItems: 1
@@ -51,27 +57,28 @@ paths:
             type: number
         - name: areas
           in: query
-          description: ''
+          description: 'Should areas be returned.'
           required: false
           type: boolean
+          default: true
         - name: grids
           in: query
-          description: ''
+          description: 'Should grid values be returned (bathymetry, ...).'
           required: false
           type: boolean
+          default: true
         - name: shoredistance
           in: query
-          description: ''
+          description: 'Should the distance the coastline be returned.'
           required: false
           type: boolean
+          default: true
       responses:
         '400':
           description: Invalid input
+        '200':
+          description: OK
     post:
-      tags:
-        - Coordinates
-      summary: ''
-      description: ''
       operationId: xylookup_post
       consumes:
         - application/json
@@ -89,6 +96,8 @@ paths:
       responses:
         '400':
           description: Invalid input
+        '200':
+          description: OK
 definitions:
   Point2D:
     type: array
@@ -105,7 +114,10 @@ definitions:
           $ref: '#/definitions/Point2D'
       areas:
         type: boolean
+        default: true
       grids:
         type: boolean
+        default: true
       shoredistance:
         type: boolean
+        default: true
