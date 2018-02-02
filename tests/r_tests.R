@@ -31,7 +31,7 @@ create_test_results <- function(points, subset=1:5) {
   x <- sdmpredictors::load_layers(c('BO2_tempmean_ss', 'BO2_salinitymean_ss'))
   r <- extract(x, points)
   r <- cbind(r, bathymetry = create_bathymetry_results(points))
-  colnames(r) <- c('temperature (sea surface)', 'salinity (sea surface)', 'bathymetry')
+  colnames(r) <- c('sstemperature', 'sssalinity', 'bathymetry')
   write.csv(cbind(points, r), 'r_testlookup.csv', row.names=FALSE)
 }
 points <- read.csv("r_testfile.csv")
