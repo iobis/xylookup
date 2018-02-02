@@ -45,6 +45,16 @@ Note that msgpack data can also be used for sending/receiving data.
 - Configure nginx so that it proxies all calls to gunicorn
 - Update service/config.py, set the datadir, PostgreSQL connection string and if needed the available areas.
 
+### Important commands
+
+Manually running tests
+
+    python -m pytest
+    
+Starting the gunicorn service on the server
+
+    sudo systemctl start xylookup_service 
+
 ## Data pre-processing
 
 ### final_grid5
