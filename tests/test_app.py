@@ -146,8 +146,8 @@ def check_1_values(data):
     assert len(data['grids']) > 0
     assert 1680 < data['shoredistance'] < 1720
     grids = data['grids']
-    assert grids['temperature (sea surface)'] == pytest.approx(12.475, 0.001)
-    assert grids['salinity (sea surface)'] == pytest.approx(32.918, 0.001)
+    assert grids['sstemperature'] == pytest.approx(12.475, 0.001)
+    assert grids['sssalinity'] == pytest.approx(32.918, 0.001)
     assert grids['bathymetry'] == pytest.approx(5.2, 0.1)
 
 
@@ -190,8 +190,8 @@ def test_compare_results_r(client):
     for i, actual in enumerate(data):
         expected = pointvalues[i]
         grids = actual['grids']
-        assert_value(grids, 'temperature (sea surface)', expected[0], 0.001)
-        assert_value(grids, 'salinity (sea surface)', expected[1], 0.001)
+        assert_value(grids, 'sstemperature', expected[0], 0.001)
+        assert_value(grids, 'sssalinity', expected[1], 0.001)
         assert_value(grids, 'bathymetry', expected[2], 0.1)
 
 

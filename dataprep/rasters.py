@@ -136,5 +136,5 @@ if __name__ == '__main__':
     gebco2memmap()
     gbr100v5_memmap()
     # boem2memmap() # different projection
-    sdmpredictors2memmap(layers={'Temperature (sea surface)': ['BO2_tempmean_ss'], 'Salinity (sea surface)': ['BO2_salinitymean_ss']})
+    sdmpredictors2memmap(layers={'sstemperature': ['BO2_tempmean_ss'], 'sssalinity': ['BO2_salinitymean_ss']})
     combine_metadata()
