@@ -3,20 +3,63 @@ Webservice for looking up environmental and societal spatial information based o
 
 ## API
 
+Documentation
+
+<https://iobis.github.io/xylookup/>
+
 Get all data for a point as json
 
-http://api.iobis.org/xylookup?x=2.90&y=51.2
+<http://api.iobis.org/xylookup?x=2.90&y=51.2>
 
 Get all data for multiple points as json
 
-http://api.iobis.org/xylookup?x=2.90,2.1&y=51.2,51.1
+<http://api.iobis.org/xylookup?x=2.90,2.1&y=51.2,51.1>
 
 Filtering the results can be done by excluding the different categories(`areas`, `shoredistance`, `grids`) e.g.
 to return results without the distance to the shoreline:
 
-http://api.iobis.org/xylookup?x=2.90&y=51.2&shoredistance=0
+<http://api.iobis.org/xylookup?x=2.90&y=51.2&shoredistance=0>
 
 Note that msgpack data can also be used for sending/receiving data.
+
+## In R: obistools 
+
+```R
+devtools::install_github('iobis/obistools')
+
+library(obistools)
+
+?lookup_xy
+
+
+xydata <- lookup_xy(abra, shoredistance = TRUE, grids = TRUE, areas = TRUE)
+head(xydata)
+```
+
+```
+shoredistance sstemperature sssalinity bathymetry                                                                                                   final_grid5
+1            30      10.28631   34.76271       -4.0 United Kingdom, United Kingdom, F, T, eez, eez, United Kingdom: all, United Kingdom, United Kingdom: all, 221
+2          1080      10.33242   34.90622       61.4 United Kingdom, United Kingdom, T, F, eez, eez, United Kingdom, United Kingdom: all, 221, United Kingdom: all
+3          1184      10.72199   34.88896      122.2 United Kingdom, United Kingdom, T, F, eez, eez, United Kingdom, United Kingdom: all, 221, United Kingdom: all
+4           290      10.79197   34.29342       20.6 United Kingdom, United Kingdom, F, T, eez, eez, United Kingdom: all, United Kingdom, United Kingdom: all, 221
+5           259      10.72199   34.88896       51.0 United Kingdom, United Kingdom, F, T, eez, eez, United Kingdom: all, United Kingdom, United Kingdom: all, 221
+6           506      10.77101   34.30700       32.4 United Kingdom, United Kingdom, F, T, eez, eez, United Kingdom: all, United Kingdom, United Kingdom: all, 221
+```
+
+## In python: pyxylookup
+
+Documentation: <http://pyxylookup.readthedocs.io/en/latest/>  
+Installation:
+
+```bash
+pip install git+https://github.com/iobis/pyxylookup.git#egg=pyxylookup
+```
+
+```python
+import pyxylookup as xy
+
+xy.lookup([[120,0], [-170,1]])
+```
 
 ## Dependencies
 
