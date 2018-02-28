@@ -142,7 +142,8 @@ def test_post_msgpack_xy_outside_world(client):
 
 def check_1_values(data):
     data = data[0]
-    assert len(data['areas']) > 0 and len(data['areas'][list(config.areas.keys())[0]]) > 0
+    area_alias, cols = list(config.areas.values())[0]
+    assert len(data['areas']) > 0 and len(data['areas'][area_alias]) > 0
     assert len(data['grids']) > 0
     assert 1680 < data['shoredistance'] < 1720
     grids = data['grids']
