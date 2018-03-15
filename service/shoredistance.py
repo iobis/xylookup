@@ -120,7 +120,7 @@ def _on_land(cur, pointstable, npoints):
     cur.execute("""
     SELECT pts.id
       FROM {0} pts
- LEFT JOIN water_polygons0_00005 all_water ON ST_Intersects(all_water.geom, pts.geom)
+ LEFT JOIN water_polygons0_00005 all_water ON ST_DWithin(all_water.geom, pts.geom, 0)
      WHERE all_water.geom IS NULL
     """.format(pointstable))
     ids_onland = cur.fetchall()
