@@ -128,6 +128,10 @@ Starting from the final.shp shapefile, perform the following steps:
     update final_grid5 as f set id = t.id from (select row_number() over (order by name, country, type, base) as id, sp_id, name, country, type, base 
     from final_grid5 group by sp_id, name, country, type, base order by name, country, type, base) t where f.sp_id = t.sp_id;
 
+    # areas table then becomes
+    create table areas as select distinct id::integer, sp_id, name, country, type, base from final_grid5 order by id
+
+
 ### Shore distance
 
 All data used was downloaded from [Open Street Map](http://openstreetmapdata.com/data/coast).
