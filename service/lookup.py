@@ -104,6 +104,7 @@ def lookup(req):
             if pshoredistance:
                 result['shoredistance'] = shoredists[idx]
     except Exception as ex:
+        print(ex)
         raise falcon.HTTPError(falcon.HTTP_400, 'Error looking up data for provided points', str(ex))
     finally:
         conn.rollback()

@@ -5,9 +5,9 @@ def get_areas(cur, points, pointstable):
     tablecols = config.areas
     results = [{} for _ in range(len(points))]
     for table, (alias, columns) in tablecols.items():
-        cur.execute("""SELECT pts.id, {} FROM {} pts, {} grid 
+        cur.execute("""SELECT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
                         WHERE ST_Intersects(grid.geom, pts.geom) 
-                        ORDER BY pts.id""".format(",".join(columns), pointstable, table))
+                        ORDER BY pts.id""".format(", grid.".join(columns), pointstable, table))
         data = cur.fetchone()
         for idx in range(len(points)):
             results[idx][alias] = []

@@ -13,11 +13,13 @@ class LookupResource(object):
                 resp.content_type = falcon.MEDIA_MSGPACK
                 resp.status = falcon.HTTP_200
             except Exception as ex:
+                print(str(ex))
                 raise falcon.HTTPError(falcon.HTTP_400, 'Error creating msgpack response', str(ex))
         else:
             try:
                 resp.body = json.dumps(results)
             except Exception as ex:
+                print(str(ex))
                 raise falcon.HTTPError(falcon.HTTP_400, 'Error creating JSON response', str(ex))
 
     def on_get(self, req, resp):
