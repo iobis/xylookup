@@ -66,6 +66,7 @@ def lookup(req):
         pareas = data.get('areas', True)
         pgrids = data.get('grids', True)
         pshoredistance = data.get('shoredistance', True)
+        pareasdistance = data.get('areasdistance')
     else:
         x = req.get_param_as_list('x')
         y = req.get_param_as_list('y')
