@@ -73,6 +73,12 @@ paths:
           required: false
           type: boolean
           default: true
+        - name: areas_distance
+          in: query
+          description: 'Distance in meters within which areas have to be in order to be detected (default: 0 meters = intersect).'
+          required: false
+          type: integer
+          default: 0
       responses:
         '400':
           description: Invalid input
