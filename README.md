@@ -127,8 +127,13 @@ Starting from the final.shp shapefile, perform the following steps:
     psql -d xylookup -U postgres -p 5433 -f final_grid5.sql
 
 
-    # in sql drop the sp_id column
+    # in sql drop the sp_id and geog column
     ALTER TABLE final_grid5 DROP COLUMN sp_id;
+    ALTER TABLE final_grid5 DROP COLUMN geog;
+    ALTER TABLE final_grid5 ADD COLUMN geog geography;
+    UPDATE final_grid5 SET geog = geom::geography;
+    CREATE INDEX final_grid5_geomix ON public.final_grid5 USING GIST (geom);
+    CREATE INDEX final_grid5_geogix ON public.final_grid5 USING GIST (geog);
 
     # in sql replace the id column values to generate area ids and change data type to int
     update final_grid5 as f set id = t.id from (select row_number() over (order by name, country, type, base) as id, name, country, type, base 
