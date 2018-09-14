@@ -22,13 +22,17 @@ def points_to_file(points):
     return StringIO(txt)
 
 
-def load_points(cur, points):
+def load_points(cur, points, geog=False):
     tmptable = "tmp" + str(uuid.uuid4()).replace("-", "")
     cur.execute("""CREATE TABLE {0}(id INTEGER);
        SELECT AddGeometryColumn('{0}', 'geom', 4326, 'POINT', 2);
        CREATE INDEX {0}_geom_gist ON {0} USING gist(geom);""".format(tmptable))
     f = points_to_file(points)
     cur.copy_from(f, tmptable, columns = ('id', 'geom'))
+    if geog:
+        cur.execute("""ALTER TABLE {0} ADD COLUMN geog geography;
+            UPDATE {0} SET geog = geom::geography;
+            CREATE INDEX {0}_geog_gist ON {0} USING gist(geog);""".format(tmptable))
     return tmptable
 
 
@@ -96,7 +100,7 @@ def lookup(req):
         raise falcon.HTTPInvalidParam('Invalid coordinates (xmin: -180, ymin: -90, xmax: 180, ymax: 90)', 'x/y points')
     try:
         with conn.cursor() as cur:
-            pointstable = load_points(cur, points)
+            pointstable = load_points(cur, points, geog=(pareas and pareasdistancewithin > 0))
             if pareas:
                 areavals = areas.get_areas(cur, points, pointstable, pareasdistancewithin)
             if pgrids:

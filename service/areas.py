@@ -7,7 +7,7 @@ def get_areas(cur, points, pointstable, distancewithin):
     for table, (alias, columns) in tablecols.items():
         if distancewithin is not None and distancewithin > 0:
             cur.execute("""SELECT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
-                                        WHERE ST_DWithin(grid.geog, pts.geog, {}) 
+                                        WHERE ST_DWithin(pts.geog, grid.geog, {}) 
                                         ORDER BY pts.id""".format(", grid.".join(columns), pointstable, table, distancewithin))
         else: # faster query
             cur.execute("""SELECT pts.id as ptsid, grid.{} FROM {} pts, {} grid 

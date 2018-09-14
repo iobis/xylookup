@@ -172,6 +172,19 @@ def test_lookup_1_msgpack_point_works(client):
     check_1_values(data)
 
 
+def test_lookup_areasdistancewithin_works(client):
+    print('test_lookup_areasdistancewithin_works')
+    x, y = 2.890605926513672, 51.241779327392585
+    result = client.simulate_get('/lookup', query_string='x={0}&y={1}&areasdistancewithin=100000'.format(x, y))
+    assert result.status_code == 200
+    print(result.content)
+    print(result.json)
+    data = result.json
+    check_1_values(data)
+    area_alias, cols = list(config.areas.values())[0]
+    assert len(data[0]['areas']) > 0 and len(data[0]['areas'][area_alias]) > 3
+
+
 def test_compare_results_r(client):
     print('test_compare_results_r')
     def assert_value(d, key, expectedv, tolerance):
