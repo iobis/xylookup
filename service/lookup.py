@@ -72,7 +72,7 @@ def lookup(req):
         pareas = data.get('areas', True)
         pgrids = data.get('grids', True)
         pshoredistance = data.get('shoredistance', True)
-        pareasdistancewithin = data.get('areasdistance', 0) # distance to search for areas
+        pareasdistancewithin = data.get('areasdistancewithin', 0) # distance to search for areas
     else:
         x = req.get_param_as_list('x')
         y = req.get_param_as_list('y')
