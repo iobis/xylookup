@@ -115,6 +115,5 @@ def lookup(req):
         print(ex)
         raise falcon.HTTPError(falcon.HTTP_400, 'Error looking up data for provided points', str(ex))
     finally:
-        # conn.rollback()
-        conn.commit()
+        conn.rollback()
     return results

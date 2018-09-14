@@ -127,13 +127,16 @@ Starting from the final.shp shapefile, perform the following steps:
     psql -d xylookup -U postgres -p 5433 -f final_grid5.sql
 
 
+    # in sql drop the sp_id column
+    ALTER TABLE final_grid5 DROP COLUMN sp_id;
+
     # in sql replace the id column values to generate area ids and change data type to int
-    update final_grid5 as f set id = t.id from (select row_number() over (order by name, country, type, base) as id, sp_id, name, country, type, base 
-    from final_grid5 group by sp_id, name, country, type, base order by name, country, type, base) t where f.sp_id = t.sp_id;
+    update final_grid5 as f set id = t.id from (select row_number() over (order by name, country, type, base) as id, name, country, type, base 
+    from final_grid5 group by name, country, type, base order by name, country, type, base) t where f.name = t.name;
     ALTER TABLE final_grid5 ALTER COLUMN id TYPE integer;
     
     # areas table then becomes
-    create table areas as select distinct id::integer, sp_id, name, country, type, base from final_grid5 order by id
+    create table areas as select distinct id::integer, name, country, type, base from final_grid5 order by id
 
 
 ### Shore distance
@@ -189,11 +192,7 @@ Then execute the following sql code in PostgreSQL:
 Run dataprep/rasters.py, it prepares both the data and metadata needed. Data is prepared by storing them as uncompressed binary numpy array files which are later on read by using memorymapped files.
 
 Some input source data will have to be downloaded manually such as the EMODnet and GEBCO bathymetry.
-
-## Roadmap
-
-Add support for looking up data based on time and depth.  
-Document the api using Swagger.  
+ 
 
 # xylookup OpenAPI Specification
 [![Build Status](https://travis-ci.org/iobis/xylookup.svg?branch=master)](https://travis-ci.org/iobis/xylookup)

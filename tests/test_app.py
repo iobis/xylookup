@@ -6,14 +6,15 @@ import json
 import csv
 import service.app as app
 import service.config as config
-
 # Terminal run: python -m pytest
 
+
+def msgpack_loads(data):
+    return msgpack.loads(data, raw=False)
 
 @pytest.fixture()
 def client():
     return testing.TestClient(app.create())
-
 
 def simulate_msgpack_lookup(client, points):
     packed = msgpack.dumps({'points': points}, use_bin_type=True)
@@ -167,7 +168,7 @@ def test_lookup_1_msgpack_point_works(client):
     print('test_lookup_1_msgpack_point_works')
     result = simulate_msgpack_lookup(client, [[2.890605926513672, 51.241779327392585]])
     assert result.status_code == 200
-    data = msgpack.loads(result.content, raw=False)
+    data = msgpack_loads(result.content)
     check_1_values(data)
 
 
@@ -187,7 +188,7 @@ def test_compare_results_r(client):
                 points.append(row[0:2])
                 pointvalues.append(row[2:5])
     results = simulate_msgpack_lookup(client, points)
-    data = msgpack.loads(results.content, raw=False)
+    data = msgpack_loads(results.content)
     for i, actual in enumerate(data):
         expected = pointvalues[i]
         grids = actual['grids']
@@ -235,7 +236,7 @@ def test_post_msgpack_results_filtering(client, extra_params):
     d.update(extra_params)
     packed = msgpack.dumps(d, use_bin_type=True)
     results = client.simulate_post('/lookup', body=packed, headers={'Content-Type': falcon.MEDIA_MSGPACK})
-    data = msgpack.loads(results.content, raw=False)[0]
+    data = msgpack_loads(results.content)[0]
     assert extra_params.get('areas', True) == ('areas' in data)
     assert extra_params.get('grids', True) == ('grids' in data)
     assert extra_params.get('shoredistance', True) == ('shoredistance' in data)

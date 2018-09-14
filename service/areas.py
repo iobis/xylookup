@@ -5,10 +5,14 @@ def get_areas(cur, points, pointstable, distancewithin):
     tablecols = config.areas
     results = [{} for _ in range(len(points))]
     for table, (alias, columns) in tablecols.items():
-        distancewithin
-        cur.execute("""SELECT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
-                        WHERE ST_Intersects(grid.geom, pts.geom) 
-                        ORDER BY pts.id""".format(", grid.".join(columns), pointstable, table))
+        if distancewithin is not None and distancewithin > 0:
+            cur.execute("""SELECT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
+                                        WHERE ST_DWithin(grid.geog, pts.geog, {}) 
+                                        ORDER BY pts.id""".format(", grid.".join(columns), pointstable, table, distancewithin))
+        else: # faster query
+            cur.execute("""SELECT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
+                            WHERE ST_Intersects(grid.geom, pts.geom) 
+                            ORDER BY pts.id""".format(", grid.".join(columns), pointstable, table))
         data = cur.fetchone()
         for idx in range(len(points)):
             results[idx][alias] = []
