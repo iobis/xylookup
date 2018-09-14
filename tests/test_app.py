@@ -1,7 +1,7 @@
 from falcon import testing
 import falcon
 import pytest
-import umsgpack as msgpack
+import msgpack
 import json
 import csv
 import service.app as app
@@ -16,7 +16,7 @@ def client():
 
 
 def simulate_msgpack_lookup(client, points):
-    packed = msgpack.dumps({'points': points})
+    packed = msgpack.dumps({'points': points}, use_bin_type=True)
     return client.simulate_post('/lookup', body=packed, headers={'Content-Type': falcon.MEDIA_MSGPACK})
 
 
@@ -107,7 +107,7 @@ def test_post_msgpack_invalid(client):
 
 def test_post_msgpack_not_dict(client):
     print('test_post_msgpack_not_dict')
-    packed = msgpack.dumps("not a dictionary")
+    packed = msgpack.dumps("not a dictionary", use_bin_type=True)
     result = client.simulate_post('/lookup', body=packed, headers={'Content-Type': falcon.MEDIA_MSGPACK})
     assert result.status_code == 400
     assert "Invalid" in result.json["title"]
@@ -167,7 +167,7 @@ def test_lookup_1_msgpack_point_works(client):
     print('test_lookup_1_msgpack_point_works')
     result = simulate_msgpack_lookup(client, [[2.890605926513672, 51.241779327392585]])
     assert result.status_code == 200
-    data = msgpack.loads(result.content)
+    data = msgpack.loads(result.content, raw=False)
     check_1_values(data)
 
 
@@ -187,7 +187,7 @@ def test_compare_results_r(client):
                 points.append(row[0:2])
                 pointvalues.append(row[2:5])
     results = simulate_msgpack_lookup(client, points)
-    data = msgpack.loads(results.content)
+    data = msgpack.loads(results.content, raw=False)
     for i, actual in enumerate(data):
         expected = pointvalues[i]
         grids = actual['grids']
@@ -233,9 +233,9 @@ def test_post_msgpack_results_filtering(client, extra_params):
     print('test_post_msgpack_results_filtering')
     d = {'points': [[2.890605926513672, 51.241779327392585]]}
     d.update(extra_params)
-    packed = msgpack.dumps(d)
+    packed = msgpack.dumps(d, use_bin_type=True)
     results = client.simulate_post('/lookup', body=packed, headers={'Content-Type': falcon.MEDIA_MSGPACK})
-    data = msgpack.loads(results.content)[0]
+    data = msgpack.loads(results.content, raw=False)[0]
     assert extra_params.get('areas', True) == ('areas' in data)
     assert extra_params.get('grids', True) == ('grids' in data)
     assert extra_params.get('shoredistance', True) == ('shoredistance' in data)

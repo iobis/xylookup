@@ -1,5 +1,5 @@
 import simplejson as json
-import umsgpack as msgpack
+import msgpack
 import falcon
 import psycopg2
 import uuid
@@ -17,7 +17,6 @@ import service.config as config
 conn = psycopg2.connect(config.connstring)
 
 
-# TODO Add support for datetime
 def points_to_file(points):
     txt = "\n".join(["{}\tSRID=4326;POINT({} {})'".format(idx, xy[0], xy[1]) for idx, xy in enumerate(points)])
     return StringIO(txt)
@@ -40,6 +39,13 @@ def get_param_as_bool_with_default(req, paramname, default=False):
     return v
 
 
+def get_param_as_int_with_default(req, paramname, required=False, min=None, max=None, default= 0):
+    v = req.get_param_as_int(paramname, required=required, min=min, max=max)
+    if v is None:
+        v = default
+    return v
+
+
 def lookup(req):
     # points should be a nested array of x,y coordinates
     if req.method == "POST":
@@ -50,7 +56,7 @@ def lookup(req):
 
         if req.content_type and req.content_type.lower() == falcon.MEDIA_MSGPACK:
             try:
-                data = msgpack.unpackb(raw_data, use_list=False)
+                data = msgpack.unpackb(raw_data, use_list=False, raw=False)
             except Exception:
                 raise falcon.HTTPError(falcon.HTTP_400, 'Invalid msgpack', 'Could not decode the request body. The msgpack was incorrect.')
         else:
@@ -66,13 +72,14 @@ def lookup(req):
         pareas = data.get('areas', True)
         pgrids = data.get('grids', True)
         pshoredistance = data.get('shoredistance', True)
-        pareasdistance = data.get('areasdistance')
+        pareasdistancewithin = data.get('areasdistance', 0) # distance to search for areas
     else:
         x = req.get_param_as_list('x')
         y = req.get_param_as_list('y')
         pareas = get_param_as_bool_with_default(req, 'areas', default=True)
         pgrids = get_param_as_bool_with_default(req, 'grids', default=True)
         pshoredistance = get_param_as_bool_with_default(req, 'shoredistance', default=True)
+        pareasdistancewithin = get_param_as_int_with_default(req, 'areasdistancewithin', min=0, default=0)
         if not x or not y or len(x) == 0 or len(y) == 0:
             raise falcon.HTTPInvalidParam('Missing parameters x and/or y', 'x/y')
         elif len(x) != len(y):
@@ -91,7 +98,7 @@ def lookup(req):
         with conn.cursor() as cur:
             pointstable = load_points(cur, points)
             if pareas:
-                areavals = areas.get_areas(cur, points, pointstable)
+                areavals = areas.get_areas(cur, points, pointstable, pareasdistancewithin)
             if pgrids:
                 rastervals = rasters.get_values(points)
             if pshoredistance:
@@ -108,5 +115,6 @@ def lookup(req):
         print(ex)
         raise falcon.HTTPError(falcon.HTTP_400, 'Error looking up data for provided points', str(ex))
     finally:
-        conn.rollback()
+        # conn.rollback()
+        conn.commit()
     return results

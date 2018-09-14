@@ -71,6 +71,9 @@ xy.lookup([[120,0], [-170,1]])
     - psycopg2
     - gunicorn (webserver)
     - gdal (for the datapreparation scripts, not for the service itself)
+    - test dependencies:
+        - pytest
+        - pytest-profiling 
 - nginx
 
 ## Deployment

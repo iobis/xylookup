@@ -1,6 +1,6 @@
 import falcon
 import simplejson as json
-import umsgpack as msgpack
+import msgpack
 import service.lookup as lookup
 
 

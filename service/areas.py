@@ -1,10 +1,11 @@
 import service.config as config
 
 
-def get_areas(cur, points, pointstable):
+def get_areas(cur, points, pointstable, distancewithin):
     tablecols = config.areas
     results = [{} for _ in range(len(points))]
     for table, (alias, columns) in tablecols.items():
+        distancewithin
         cur.execute("""SELECT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
                         WHERE ST_Intersects(grid.geom, pts.geom) 
                         ORDER BY pts.id""".format(", grid.".join(columns), pointstable, table))
