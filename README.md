@@ -103,7 +103,7 @@ Starting the gunicorn service on the server
 
 ## Data pre-processing
 
-### final_grid5
+### areas: final_grid5
 
 Starting from the final.shp shapefile, perform the following steps:
 
@@ -143,6 +143,7 @@ Starting from the final.shp shapefile, perform the following steps:
     # areas table then becomes
     create table areas as select distinct id::integer, name, country, type, base from final_grid5 order by id
 
+Additionally an endpoint for generating a SQL script for populating the obis.areas table has been created ([http://api.iobis.org/xylookup/areas](http://api.iobis.org/xylookup/areas)). 
 
 ### Shore distance
 
