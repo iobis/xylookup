@@ -25,5 +25,24 @@ def get_areas(cur, points, pointstable, distancewithin):
     return results
         
         
-        
+def table_sql(req):
+    def sqlval(x):
+        if x is None:
+            return 'NULL'
+        elif isinstance(x, int):
+            return str(x)
+        return "'" + x + "'"
 
+    import psycopg2
+    output = ["DELETE FROM obis.areas;"]
+    with psycopg2.connect(config.connstring) as conn:
+        with conn.cursor() as cur:
+            for table in config.areas.keys():
+                cur.execute("SELECT distinct id::integer, name, country, type, base FROM {} ORDER BY id".format(table))
+                data = cur.fetchone()
+                output.append("-- Data from " + table)
+                while data:
+                    output.append("INSERT INTO obis.areas (id, name, country, type, base) VALUES ({});".format(", ".join(map(sqlval, data))))
+                    data = cur.fetchone()
+
+    return "\n".join(output) + "\n"

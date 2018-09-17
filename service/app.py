@@ -2,6 +2,7 @@ import falcon
 import simplejson as json
 import msgpack
 import service.lookup as lookup
+import service.areas as areas
 
 
 class LookupResource(object):
@@ -31,8 +32,18 @@ class LookupResource(object):
         self._prepare_response(results, req, resp)
 
 
+class AreasResource(object):
+
+    def on_get(self, req, resp):
+        resp.body = areas.table_sql(req)
+        resp.content_type = falcon.MEDIA_TEXT
+        resp.status = falcon.HTTP_200
+        resp.content_disposition = 'inline; filename = "create_areas.txt"'
+
+
 def create():
     api = falcon.API()
+    api.add_route('/lookup/areas', AreasResource())
     api.add_route('/lookup', LookupResource())
     return api
 
