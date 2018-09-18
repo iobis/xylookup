@@ -6,11 +6,11 @@ def get_areas(cur, points, pointstable, distancewithin):
     results = [{} for _ in range(len(points))]
     for table, (alias, columns) in tablecols.items():
         if distancewithin is not None and distancewithin > 0:
-            cur.execute("""SELECT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
+            cur.execute("""SELECT DISTINCT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
                                         WHERE ST_DWithin(pts.geog, grid.geog, {}) 
                                         ORDER BY pts.id""".format(", grid.".join(columns), pointstable, table, distancewithin))
         else: # faster query
-            cur.execute("""SELECT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
+            cur.execute("""SELECT DISTINCT pts.id as ptsid, grid.{} FROM {} pts, {} grid 
                             WHERE ST_Intersects(grid.geom, pts.geom) 
                             ORDER BY pts.id""".format(", grid.".join(columns), pointstable, table))
         data = cur.fetchone()
