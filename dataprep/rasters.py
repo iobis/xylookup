@@ -5,7 +5,8 @@ import glob
 import zipfile
 import json
 import subprocess
-import config
+import logging
+import service.config as config
 # import rpy2.robjects as robjects
 # for python 2.7:
 # brew install llvm
@@ -15,7 +16,7 @@ import config
 
 tmpdir = os.path.expanduser('~/a/tmp')
 outdir = os.path.join(config.datadir, 'rasters')
-dataprep_dir = os.path.expanduser('~/Dropbox (IPOfI)/xylookup/dataprep')
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%H:%M:%S', level=logging.INFO)
 
 
 def get_info(ds):
@@ -26,6 +27,7 @@ def get_info(ds):
 
 
 def create_memmap(path, outdir, outname):
+    logging.info("create_mmap")
     ds = gdal.Open(path)
     band = ds.GetRasterBand(1)
     arr = band.ReadAsArray()
@@ -44,7 +46,8 @@ def output_exists(outdir, outname):
 
 
 def emodnet2memmap(overwrite=False):
-    emodnet_dir = os.path.join(dataprep_dir, 'EMODNET_Bathy')
+    logging.info("emodnet2memmap")
+    emodnet_dir = os.path.join(config.dataprepdir, 'EMODNET_Bathy')
     # Step 1 unzip all
     for bathyzip in glob.glob(os.path.join(emodnet_dir, "*.zip")):
         with zipfile.ZipFile(bathyzip, 'r') as zipf:
@@ -62,7 +65,8 @@ def emodnet2memmap(overwrite=False):
 
 
 def gebco2memmap(overwrite=False):
-    gebco_dir = os.path.join(dataprep_dir, 'GEBCO_2014')
+    logging.info("gebco2memmap")
+    gebco_dir = os.path.join(config.dataprepdir, 'GEBCO_2014')
     outname = 'gebco_2014'
     if overwrite or not output_exists(outdir, outname):
         metadata = create_memmap('NETCDF:"' + os.path.join(gebco_dir, 'GEBCO_2014_2D.nc":elevation'), outdir, outname)
@@ -74,12 +78,13 @@ def gebco2memmap(overwrite=False):
 
 
 def gbr100v5_memmap(overwrite=False):
+    logging.info("gbr100v5_memmap")
     # gbr100: High-resolution bathymetry model of the Great Barrier Reef and Coral Sea, an output of Project 3DGBR
     # https://www.deepreef.org/bathymetry/65-3dgbr-bathy.html
-    gbr_dir = os.path.join(dataprep_dir, 'gbr100')
+    gbr_dir = os.path.join(config.dataprepdir, 'gbr100')
     outname = 'gbr100'
     if overwrite or not output_exists(outdir, outname):
-        metadata = create_memmap('NETCDF:"' + os.path.join(gbr_dir, 'gbr100_02sep_v5.grd":depth'), outdir, outname)
+        metadata = create_memmap('NETCDF:"' + os.path.join(gbr_dir, 'gbr100_02sep.grd":depth'), outdir, outname)
         metadata['category'] = 'bathymetry'
         metadata['bandinfo']['scale_factor'] = -1 * float(metadata['bandinfo'].get('scale_factor', 1))
         metadata['bandinfo']['add_offset'] = -1 * float(metadata['bandinfo'].get('add_offset',0))
@@ -87,9 +92,10 @@ def gbr100v5_memmap(overwrite=False):
 
 
 def boem2memmap(overwrite=False):
+    logging.info("boem2memmap")
     # BOEM Northern Gulf of Mexico Deepwater Bathymetry Grid from 3D Seismic
     # https://www.boem.gov/Gulf-of-Mexico-Deepwater-Bathymetry/
-    boem_dir = os.path.join(dataprep_dir, 'boem')
+    boem_dir = os.path.join(config.dataprepdir, 'boem')
     for fname, outname in [('BOEMbathyW_m.tif', 'BOEM_west'), ('BOEMbathyE_m.tif', 'BOEM_east')]:
         if overwrite or not output_exists(outdir, outname):
             metadata = create_memmap(os.path.join(boem_dir, fname), outdir, outname)
@@ -100,7 +106,8 @@ def boem2memmap(overwrite=False):
 
 
 def sdmpredictors2memmap(layers, overwrite=False):
-    sdmpredictors_dir = os.path.join(dataprep_dir, 'sdmpredictors')
+    logging.info("sdmpredictors2memmap")
+    sdmpredictors_dir = os.path.join(config.dataprepdir, 'sdmpredictors')
     layercodes = [l for _, codes in layers.items() for l in codes]
     code = """
 if(!require(sdmpredictors)){{
@@ -125,6 +132,7 @@ load_layers(c("{0}"), datadir = "{1}")
 
 
 def combine_metadata():
+    logging.info("combine_metadata")
     # for all json files combine into one pickle file called raster.metadata
     rastersdir = os.path.join(config.datadir, 'rasters')
     allmeta = [json.load(open(p, 'r')) for p in glob.glob(os.path.join(rastersdir, "*.json"))]
@@ -132,6 +140,7 @@ def combine_metadata():
 
 
 if __name__ == '__main__':
+    logging.info("main")
     emodnet2memmap()
     gebco2memmap()
     gbr100v5_memmap()

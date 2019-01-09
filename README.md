@@ -15,8 +15,7 @@ Get all data for multiple points as json
 
 <http://api.iobis.org/xylookup?x=2.90,2.1&y=51.2,51.1>
 
-Filtering the results can be done by excluding the different categories(`areas`, `shoredistance`, `grids`) e.g.
-to return results without the distance to the shoreline:
+Filtering the results can be done by excluding the different categories(`areas`, `shoredistance`, `grids`) e.g. to return results without the distance to the shoreline:
 
 <http://api.iobis.org/xylookup?x=2.90&y=51.2&shoredistance=0>
 
@@ -48,8 +47,11 @@ shoredistance sstemperature sssalinity bathymetry                               
 
 ## In python: pyxylookup
 
-Documentation: <http://pyxylookup.readthedocs.io/en/latest/>  
-Installation:
+#### Documentation
+
+<http://pyxylookup.readthedocs.io/en/latest/>  
+
+#### Installation
 
 ```bash
 pip install git+https://github.com/iobis/pyxylookup.git#egg=pyxylookup
@@ -86,12 +88,13 @@ xy.lookup([[120,0], [-170,1]])
 - Copy the source code from the service directory
 - Copy the datadir
 - Start gunicorn 
-    - `gunicorn --reload app:api`
+    - ~~gunicorn --reload app:api~~
+    -  ` gunicorn --pythonpath /usr/local/bin/python3 --timeout 120 --reload service.app:api`
     - Preferably make sure that gunicorn restarts when the service restarts
 - Configure nginx so that it proxies all calls to gunicorn
 - Update service/config.py, set the datadir, PostgreSQL connection string and if needed the available areas.
 
-### Important commands
+#### Important commands
 
 Manually running tests
 
@@ -103,49 +106,191 @@ Starting the gunicorn service on the server
 
 ## Data pre-processing
 
-### areas: final_grid5
+#### Areas: final_grid5
 
 Starting from the final.shp shapefile, perform the following steps:
 
-    D:\a\prog\PostgreSQL\9.6\bin\shp2pgsql -I -s 4326 final.shp final postgres > final.sql
-    psql -d xylookup -U postgres -p 5433 -f final.sql
-    
-    QGIS => Vector => research tools => Vector grid
-    xmin -180.000001 ymin -90.000001
-    xmax 180.000001 ymax 90.000001
-    
-    X: 5,000000030
-    Output grid as polygons
-    D:/a/projects/iobis/xylookup/vector/data/gridpoly_5.shp
-    
-    QGIS => Vector => Geoprocessing => Intersect
-    final
-    gridpoly_5
-    D:/a/projects/iobis/xylookup/vector/data/final_grid5.shp
-    
-    D:\a\prog\PostgreSQL\9.6\bin\shp2pgsql -I -s 4326 final_grid5.shp final_grid5 postgres > final_grid5.sql
-    psql -d xylookup -U postgres -p 5433 -f final_grid5.sql
+- Create grid layer in QGIS
 
+```
+QGIS => Vector => research tools => Vector grid
+xmin -180.000001 ymin -90.000001
+xmax 180.000001 ymax 90.000001
+X: 5,000000030
+Output grid as polygons
+gridpoly_5.shp
+```
 
-    # in sql drop the sp_id and geog column
-    ALTER TABLE final_grid5 DROP COLUMN sp_id;
-    ALTER TABLE final_grid5 DROP COLUMN geog;
-    ALTER TABLE final_grid5 ADD COLUMN geog geography;
-    UPDATE final_grid5 SET geog = geom::geography;
-    CREATE INDEX final_grid5_geomix ON public.final_grid5 USING GIST (geom);
-    CREATE INDEX final_grid5_geogix ON public.final_grid5 USING GIST (geog);
+- Intersect layer `final` and grid
 
-    # in sql replace the id column values to generate area ids and change data type to int
-    update final_grid5 as f set id = t.id from (select row_number() over (order by name, country, type, base) as id, name, country, type, base 
-    from final_grid5 group by name, country, type, base order by name, country, type, base) t where f.name = t.name;
-    ALTER TABLE final_grid5 ALTER COLUMN id TYPE integer;
+``` 
+QGIS => Vector => Geoprocessing => Intersect
+final
+gridpoly_5
+final_grid5.shp
+```
+
+- Upload gridded layer to PostgreSQL and apply fixes
+
+```
+shp2pgsql -I -s 4326 final_grid5.shp final_grid5 postgres > final_grid5.sql
+psql -d xylookup -U postgres -p 5433 -f final_grid5.sql
+
+# in sql drop the sp_id and geog column
+ALTER TABLE final_grid5 DROP COLUMN sp_id;
+ALTER TABLE final_grid5 DROP COLUMN geog;
+ALTER TABLE final_grid5 ADD COLUMN geog geography;
+UPDATE final_grid5 SET geog = geom::geography;
+CREATE INDEX final_grid5_geomix ON public.final_grid5 USING GIST (geom);
+CREATE INDEX final_grid5_geogix ON public.final_grid5 USING GIST (geog);
+
+# in sql replace the id column values to generate area ids and change data type to int
+update final_grid5 as f set id = t.id from (select row_number() over (order by name, country, type, base) as id, name, country, type, base 
+from final_grid5 group by name, country, type, base order by name, country, type, base) t where f.name = t.name;
+ALTER TABLE final_grid5 ALTER COLUMN id TYPE integer;
     
-    # areas table then becomes
-    create table areas as select distinct id::integer, name, country, type, base from final_grid5 order by id
+# areas table then becomes
+#create table areas as select distinct id::integer, name, country, type, base from final_grid5 order by id
+```
 
-Additionally an endpoint for generating a SQL script for populating the obis.areas table has been created ([http://api.iobis.org/xylookup/areas](http://api.iobis.org/xylookup/areas)). 
+#### Areas: EBSA
 
-### Shore distance
+- Fix EBSA layer by applying zero distance buffer
+- Intersect EBSA layer and grid
+
+``` 
+QGIS => Vector => Geoprocessing => Intersect
+ebsa
+gridpoly_5
+ebsa_grid5.shp
+```
+
+- Upload gridded layer to PostgreSQL and apply fixes
+
+```
+shp2pgsql -I -s 4326 ebsa_grid5.shp ebsa_grid5 postgres > ebsa_grid5.sql
+psql -d xylookup -U postgres -p 5433 -f ebsa_grid5.sql
+
+ALTER TABLE ebsa_grid5 DROP COLUMN ebsa_id;
+ALTER TABLE ebsa_grid5 DROP COLUMN global_id;
+ALTER TABLE ebsa_grid5 DROP COLUMN area_mw_km;
+ALTER TABLE ebsa_grid5 DROP COLUMN gid;
+ALTER TABLE ebsa_grid5 ADD COLUMN geog geography;
+UPDATE ebsa_grid5 SET geog = geom::geography;
+CREATE INDEX ebsa_grid5_geomix ON public.ebsa_grid5 USING GIST (geom);
+CREATE INDEX ebsa_grid5_geogix ON public.ebsa_grid5 USING GIST (geog);
+
+update ebsa_grid5
+set id = 10000 + t.row_number
+from (
+	select name, row_number() over (
+		order by name
+	) from ebsa_grid5
+	group by name
+	order by name
+) as t where t.name = ebsa_grid5.name
+```
+
+#### Areas: MWHS
+
+- Fix MWHS layer by applying zero distance buffer
+- Intersect MWHS layer and grid
+- Upload gridded layer to PostgreSQL and apply fixes
+
+```
+shp2pgsql -I -s 4326 mwhs_grid5.shp mwhs_grid5 postgres > mwhs_grid5.sql
+psql -d xylookup -U postgres -p 5433 -f mwhs_grid5.sql
+
+ALTER TABLE mwhs_grid5 DROP COLUMN longitude;
+ALTER TABLE mwhs_grid5 DROP COLUMN latitude;
+ALTER TABLE mwhs_grid5 DROP COLUMN sph_area;
+ALTER TABLE mwhs_grid5 DROP COLUMN source;
+ALTER TABLE mwhs_grid5 DROP COLUMN id;
+ALTER TABLE mwhs_grid5 DROP COLUMN gid;
+ALTER TABLE mwhs_grid5 ADD COLUMN geog geography;
+UPDATE mwhs_grid5 SET geog = geom::geography;
+CREATE INDEX mwhs_grid5_geomix ON public.mwhs_grid5 USING GIST (geom);
+CREATE INDEX mwhs_grid5_geogix ON public.mwhs_grid5 USING GIST (geog);
+
+ALTER TABLE mwhs_grid5 add COLUMN id integer;
+update mwhs_grid5 set id = 20000 + refid;
+
+ALTER TABLE public.mwhs_grid5 RENAME COLUMN full_name TO "name";
+```
+
+#### Areas: IHO
+
+- Fix IHO layer by applying zero distance buffer
+- Simplify
+- Intersect IHO layer and grid
+- Upload gridded layer to PostgreSQL and apply fixes
+
+```
+shp2pgsql -I -s 4326 iho_grid5.shp iho_grid5 postgres > iho_grid5.sql
+psql -d xylookup -U postgres -p 5433 -f iho_grid5.sql
+
+ALTER TABLE iho_grid5 DROP COLUMN id;
+ALTER TABLE iho_grid5 DROP COLUMN gid;
+ALTER TABLE iho_grid5 DROP COLUMN longitude;
+ALTER TABLE iho_grid5 DROP COLUMN latitude;
+ALTER TABLE iho_grid5 DROP COLUMN area;
+ALTER TABLE iho_grid5 DROP COLUMN id_2;
+ALTER TABLE iho_grid5 DROP COLUMN min_x;
+ALTER TABLE iho_grid5 DROP COLUMN min_y;
+ALTER TABLE iho_grid5 DROP COLUMN max_x;
+ALTER TABLE iho_grid5 DROP COLUMN max_y;
+ALTER TABLE iho_grid5 DROP COLUMN ymin;
+ALTER TABLE iho_grid5 DROP COLUMN ymax;
+ALTER TABLE iho_grid5 DROP COLUMN __xmin;
+ALTER TABLE iho_grid5 DROP COLUMN __xmax;
+
+ALTER TABLE iho_grid5 ADD COLUMN geog geography;
+UPDATE iho_grid5 SET geog = geom::geography;
+CREATE INDEX iho_grid5_geomix ON public.iho_grid5 USING GIST (geom);
+CREATE INDEX iho_grid5_geogix ON public.iho_grid5 USING GIST (geog);
+
+ALTER TABLE iho_grid5 add COLUMN id integer;
+update iho_grid5 set id = 30000 + mrgid;
+
+ALTER TABLE iho_grid5 DROP COLUMN mrgid;
+```
+
+#### Areas: LME
+
+- Fix LME layer by applying zero distance buffer
+- Intersect LME layer and grid
+- Upload gridded layer to PostgreSQL and apply fixes
+
+```
+shp2pgsql -I -s 4326 lme_grid5.shp lme_grid5 postgres > lme_grid5.sql
+psql -d xylookup -U postgres -p 5433 -f lme_grid5.sql
+
+ALTER TABLE lme_grid5 DROP COLUMN gid;
+ALTER TABLE lme_grid5 DROP COLUMN objectid;
+ALTER TABLE lme_grid5 DROP COLUMN shape_leng;
+ALTER TABLE lme_grid5 DROP COLUMN shape_area;
+ALTER TABLE lme_grid5 DROP COLUMN lat;
+ALTER TABLE lme_grid5 DROP COLUMN lon;
+ALTER TABLE lme_grid5 DROP COLUMN id;
+ALTER TABLE lme_grid5 DROP COLUMN __xmin;
+ALTER TABLE lme_grid5 DROP COLUMN __xmax;
+ALTER TABLE lme_grid5 DROP COLUMN ymin;
+ALTER TABLE lme_grid5 DROP COLUMN ymax;
+
+ALTER TABLE lme_grid5 ADD COLUMN geog geography;
+UPDATE lme_grid5 SET geog = geom::geography;
+CREATE INDEX lme_grid5_geomix ON public.lme_grid5 USING GIST (geom);
+CREATE INDEX lme_grid5_geogix ON public.lme_grid5 USING GIST (geog);
+
+ALTER TABLE lme_grid5 add COLUMN id integer;
+update lme_grid5 set id = 40000 + lme_number;
+
+ALTER TABLE public.lme_grid5 RENAME COLUMN lme_name TO "name";
+```
+
+- Additionally an endpoint for generating a SQL script for populating the obis.areas table has been created ([http://api.iobis.org/xylookup/areas](http://api.iobis.org/xylookup/areas)). 
+
+#### Shore distance
 
 All data used was downloaded from [Open Street Map](http://openstreetmapdata.com/data/coast).
 
@@ -160,7 +305,12 @@ In order to calculate the shoredistance we need two parts:
         - `psql -d xylookup -U postgres -p 5433 -f water.sql`
 2. coastlines as geojson that are loaded in the python service for calculating the shoredistance
     - download [coastlines](http://openstreetmapdata.com/data/coastlines)
-    - import coastline-split-4326 as table coastlines in database xylookup using the QGIS DBManager because the dbf file gives errors with shp2pgsql
+    - ~~import coastline-split-4326 as table coastlines in database xylookup using the QGIS DBManager because the dbf file gives errors with shp2pgsql~~
+
+```
+shp2pgsql -I -s 4326 lines.shp coastlines postgres > coastlines.sql
+psql -d xylookup -U postgres -p 5433 -f coastlines.sql
+```
 
 Then execute the following sql code in PostgreSQL:
   
@@ -193,7 +343,7 @@ Then execute the following sql code in PostgreSQL:
     UPDATE coastlines SET geom_simple50 = simplifyutm(geom, 50, 500);
     COPY (SELECT st_asgeojson(geom_simple50) FROM coastlines) TO '<datadir>/coastlines50.jsonlines';
 
-### Rasters
+#### Rasters
 
 Run dataprep/rasters.py, it prepares both the data and metadata needed. Data is prepared by storing them as uncompressed binary numpy array files which are later on read by using memorymapped files.
 
@@ -203,7 +353,7 @@ Some input source data will have to be downloaded manually such as the EMODnet a
 # xylookup OpenAPI Specification
 [![Build Status](https://travis-ci.org/iobis/xylookup.svg?branch=master)](https://travis-ci.org/iobis/xylookup)
 
-## Links
+### Links
 
 - Documentation(ReDoc): https://iobis.github.io/xylookup/
 - SwaggerUI: https://iobis.github.io/xylookup/swagger-ui/
@@ -214,14 +364,14 @@ Some input source data will have to be downloaded manually such as the EMODnet a
 
 **Warning:** All above links are updated only after Travis CI finishes deployment
 
-## Working on specification
-### Install
+### Working on specification
+#### Installation
 
 1. Install [Node JS](https://nodejs.org/)
 2. Clone repo and `cd`
     + Run `npm install`
 
-### Usage
+#### Usage
 
 1. Run `npm start`
 2. Checkout console output to see where local server is started. You can use all [links](#links) (except `preview`) by replacing https://iobis.github.io/xylookup/ with url from the message: `Server started <url>`
