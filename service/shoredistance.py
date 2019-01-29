@@ -2,6 +2,7 @@ import math, json, gc, os
 import numpy as np
 from scipy.spatial import cKDTree
 import service.config as config
+import logging
 
 _coastlines, _coastpoints, _tree = None, None, None
 
@@ -67,8 +68,11 @@ def _gc_distance(A, B):
         return 0
     lat1 = math.radians(A[1])
     lat2 = math.radians(B[1])
-    return math.acos(math.sin(lat1)*math.sin(lat2) + math.cos(lat1)*math.cos(lat2) * math.cos(dLon))
 
+    try:
+        return(math.acos(math.sin(lat1)*math.sin(lat2) + math.cos(lat1)*math.cos(lat2) * math.cos(dLon)))
+    except ValueError:
+        return 0
 
 def _gc_distancetoline(p, A, B):
     """ http://www.movable-type.co.uk/scripts/latlong.html """
