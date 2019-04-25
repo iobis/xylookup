@@ -89,7 +89,7 @@ xy.lookup([[120,0], [-170,1]])
 - Copy the datadir
 - Start gunicorn 
     - ~~gunicorn --reload app:api~~
-    -  ` gunicorn --pythonpath /usr/local/bin/python3 --timeout 120 --reload service.app:api`
+    -  `gunicorn --pythonpath /usr/local/bin/python3 --timeout 120 --reload service.app:api`
     - Preferably make sure that gunicorn restarts when the service restarts
 - Configure nginx so that it proxies all calls to gunicorn
 - Update service/config.py, set the datadir, PostgreSQL connection string and if needed the available areas.
@@ -121,36 +121,61 @@ Output grid as polygons
 gridpoly_5.shp
 ```
 
+- Fix Antarctica
 - Intersect layer `final` and grid
 
 ``` 
 QGIS => Vector => Geoprocessing => Intersect
-final
+final_fixed
 gridpoly_5
-final_grid5.shp
+final_fixed_grid5.shp
 ```
 
 - Upload gridded layer to PostgreSQL and apply fixes
 
 ```
-shp2pgsql -I -s 4326 final_grid5.shp final_grid5 postgres > final_grid5.sql
-psql -d xylookup -U postgres -p 5433 -f final_grid5.sql
+shp2pgsql -I -s 4326 final_fixed_grid5.shp final_fixed_grid5 postgres > final_fixed_grid5.sql
+psql -d xylookup -U postgres -p 5433 -f final_fixed_grid5.sql
 
-# in sql drop the sp_id and geog column
-ALTER TABLE final_grid5 DROP COLUMN sp_id;
-ALTER TABLE final_grid5 DROP COLUMN geog;
-ALTER TABLE final_grid5 ADD COLUMN geog geography;
-UPDATE final_grid5 SET geog = geom::geography;
-CREATE INDEX final_grid5_geomix ON public.final_grid5 USING GIST (geom);
-CREATE INDEX final_grid5_geogix ON public.final_grid5 USING GIST (geog);
+ALTER TABLE final_fixed_grid5 DROP COLUMN sp_id;
+ALTER TABLE final_fixed_grid5 DROP COLUMN gid;
+ALTER TABLE final_fixed_grid5 DROP COLUMN marregion;
+ALTER TABLE final_fixed_grid5 DROP COLUMN objectid_1;
+ALTER TABLE final_fixed_grid5 DROP COLUMN mrgid;
+ALTER TABLE final_fixed_grid5 DROP COLUMN iho_sea;
+ALTER TABLE final_fixed_grid5 DROP COLUMN iho_id;
+ALTER TABLE final_fixed_grid5 DROP COLUMN base;
+ALTER TABLE final_fixed_grid5 DROP COLUMN iho_mrgid;
+ALTER TABLE final_fixed_grid5 DROP COLUMN eez;
+ALTER TABLE final_fixed_grid5 DROP COLUMN eez_id;
+ALTER TABLE final_fixed_grid5 DROP COLUMN sovereign;
+ALTER TABLE final_fixed_grid5 DROP COLUMN sov_id;
+ALTER TABLE final_fixed_grid5 DROP COLUMN eez_mrgid;
+ALTER TABLE final_fixed_grid5 DROP COLUMN longitude;
+ALTER TABLE final_fixed_grid5 DROP COLUMN latitude;
+ALTER TABLE final_fixed_grid5 DROP COLUMN area_m2;
+ALTER TABLE final_fixed_grid5 DROP COLUMN layer;
+ALTER TABLE final_fixed_grid5 DROP COLUMN path;
+ALTER TABLE final_fixed_grid5 DROP COLUMN __xmin;
+ALTER TABLE final_fixed_grid5 DROP COLUMN __xmax;
+ALTER TABLE final_fixed_grid5 DROP COLUMN ymin;
+ALTER TABLE final_fixed_grid5 DROP COLUMN ymax;
 
-# in sql replace the id column values to generate area ids and change data type to int
-update final_grid5 as f set id = t.id from (select row_number() over (order by name, country, type, base) as id, name, country, type, base 
-from final_grid5 group by name, country, type, base order by name, country, type, base) t where f.name = t.name;
-ALTER TABLE final_grid5 ALTER COLUMN id TYPE integer;
-    
-# areas table then becomes
-#create table areas as select distinct id::integer, name, country, type, base from final_grid5 order by id
+ALTER TABLE final_fixed_grid5 ADD COLUMN geog geography;
+UPDATE final_fixed_grid5 SET geog = geom::geography;
+CREATE INDEX final_fixed_grid5_geomix ON public.final_fixed_grid5 USING GIST (geom);
+CREATE INDEX final_fixed_grid5_geogix ON public.final_fixed_grid5 USING GIST (geog);
+
+update final_fixed_grid5 as f set id = t.id from (select row_number() over (order by name, country, type) as id, name, country, type 
+from final_fixed_grid5 group by name, country, type order by name, country, type) t where f.name = t.name;
+ALTER TABLE final_fixed_grid5 ALTER COLUMN id TYPE integer;
+
+select * from final_fixed_grid5
+
+create table abnj_grid5 as (select * from final_fixed_grid5 where type = 'abnj');
+delete from final_fixed_grid5 where type = 'abnj';
+CREATE INDEX abnj_grid5_geomix ON public.abnj_grid5 USING GIST (geom);
+CREATE INDEX abnj_grid5_geogix ON public.abnj_grid5 USING GIST (geog);
 ```
 
 #### Areas: EBSA
