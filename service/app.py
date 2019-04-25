@@ -3,7 +3,7 @@ import simplejson as json
 import msgpack
 import service.lookup as lookup
 import service.areas as areas
-
+import traceback
 
 class LookupResource(object):
     @staticmethod
@@ -24,8 +24,8 @@ class LookupResource(object):
                 raise falcon.HTTPError(falcon.HTTP_400, 'Error creating JSON response', str(ex))
 
     def on_get(self, req, resp):
-        results = lookup.lookup(req)
-        self._prepare_response(results, req, resp)
+	results = lookup.lookup(req)
+	self._prepare_response(results, req, resp)
 
     def on_post(self, req, resp):
         results = lookup.lookup(req)

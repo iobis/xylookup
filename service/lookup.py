@@ -13,6 +13,7 @@ import service.areas as areas
 import service.rasters as rasters
 import service.shoredistance as shoredistance
 import service.config as config
+import traceback
 
 conn = psycopg2.connect(config.connstring)
 
@@ -116,7 +117,8 @@ def lookup(req):
             if pshoredistance:
                 result['shoredistance'] = shoredists[idx]
     except Exception as ex:
-        print(ex)
+        traceback.print_exc()
+	print(ex)
         raise falcon.HTTPError(falcon.HTTP_400, 'Error looking up data for provided points', str(ex))
     finally:
         conn.rollback()
