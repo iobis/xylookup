@@ -317,19 +317,19 @@ ALTER TABLE public.lme_grid5 RENAME COLUMN lme_name TO "name";
 
 #### Shore distance
 
-All data used was downloaded from [Open Street Map](http://openstreetmapdata.com/data/coast).
+All data used was downloaded from [OpenStreetMap](https://osmdata.openstreetmap.de/data/).
 
 In order to calculate the shoredistance we need two parts:
 
 1. water polygons in the database which are used to test whether points are on land
-    - download [water polygons](http://openstreetmapdata.com/data/water-polygons)
+    - download [water polygons](https://osmdata.openstreetmap.de/data/water-polygons.html)
     - simplify
         - `ogr2ogr water_polygons0_00005.shp water_polygons.shp -simplify 0.00005`
     - upload to PostgreSQL
         - `shp2pgsql -s 4326 water_polygons0_00005 public.water_polygons0_00005 > water.sql`
         - `psql -d xylookup -U postgres -p 5433 -f water.sql`
 2. coastlines as geojson that are loaded in the python service for calculating the shoredistance
-    - download [coastlines](http://openstreetmapdata.com/data/coastlines)
+    - download [coastlines](https://osmdata.openstreetmap.de/data/coastlines.html)
     - ~~import coastline-split-4326 as table coastlines in database xylookup using the QGIS DBManager because the dbf file gives errors with shp2pgsql~~
 
 ```
@@ -418,3 +418,4 @@ Tyberghein L, Verbruggen H, Pauly K, Troupin C, Mineur F, De Clerck O (2012) Bio
 
 Map data copyrighted OpenStreetMap contributors and available from https://www.openstreetmap.org.  
     
+
